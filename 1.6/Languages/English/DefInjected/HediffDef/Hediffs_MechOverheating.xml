@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source: Defs/HediffDefs/Hediffs_MechOverheating.xml -->
+  <MAP_MechOverheating.label>Mechanoid overheating</MAP_MechOverheating.label>
+  <MAP_MechOverheating.description>Excessive heat disrupts this mechanoid's operation.</MAP_MechOverheating.description>
+  <MAP_MechOverheating.stages.0.label>Heat buildup</MAP_MechOverheating.stages.0.label>
+  <MAP_MechOverheating.stages.1.label>Mild overheating</MAP_MechOverheating.stages.1.label>
+  <MAP_MechOverheating.stages.2.label>Cooling overload</MAP_MechOverheating.stages.2.label>
+  <MAP_MechOverheating.stages.3.label>Thermal imbalance</MAP_MechOverheating.stages.3.label>
+  <MAP_MechOverheating.stages.4.label>Protective shutdown</MAP_MechOverheating.stages.4.label>
+</LanguageData>

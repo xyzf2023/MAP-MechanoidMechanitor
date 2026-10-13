@@ -21,7 +21,7 @@ namespace MAP_MechanoidMechanitor
         private const int HeatGlowIntervalTicks = 60;
         private const float HeatGlowSizeFactor = 0.4f;
         private const float BaseDamage = 10f;
-        private const float BaseHeatstrokeSeverity = 0.01f;
+        private const float BaseHeatSeverity = 0.01f;
         private readonly List<Pawn> targets = new List<Pawn>();
 
         public override void CompTick()
@@ -75,10 +75,16 @@ namespace MAP_MechanoidMechanitor
                     CurrentGameComponentCache<GameComponent_SunBossNotifications>.Get()
                         ?.NotifyHeatDamage(target);
 
-                // 原版严重度 1 为 100%；复用已有中暑，避免重复添加健康状态。
+                // 严重度 1 为 100%；机械体使用可自然散热的机体过热，其他单位使用原版中暑。
+                // 调整已有同类状态的严重度，避免热场重复添加健康状态。
                 if (!target.Dead && !target.Destroyed && target.Spawned && target.Map == map)
-                    HealthUtility.AdjustSeverity(target, HediffDefOf.Heatstroke,
-                        BaseHeatstrokeSeverity * Mathf.Min(depth + 1, 3));
+                {
+                    HediffDef heatEffect = target.RaceProps.IsMechanoid
+                        ? MAPMechanitor_HediffDefOf.MAP_MechOverheating
+                        : HediffDefOf.Heatstroke;
+                    HealthUtility.AdjustSeverity(target, heatEffect,
+                        BaseHeatSeverity * Mathf.Min(depth + 1, 3));
+                }
             }
             targets.Clear();
         }

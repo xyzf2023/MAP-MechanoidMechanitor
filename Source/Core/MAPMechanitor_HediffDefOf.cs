@@ -24,6 +24,7 @@ namespace MAP_MechanoidMechanitor
         public static HediffDef MAP_MicroCommunicator = null!;
         public static HediffDef MAP_ParallelThoughtInterface = null!;
         public static HediffDef MAP_MindMappingLoad = null!;
+        public static HediffDef MAP_MechOverheating = null!;
 
         static MAPMechanitor_HediffDefOf()
         {
