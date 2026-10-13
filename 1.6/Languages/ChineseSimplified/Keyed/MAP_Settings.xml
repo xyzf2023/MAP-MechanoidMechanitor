@@ -26,6 +26,8 @@
   <MAP_Settings.Group.Cores>核心与能力</MAP_Settings.Group.Cores>
   <MAP_Settings.AnnihilationCannonCrater.Label>湮灭炮留下深坑</MAP_Settings.AnnihilationCannonCrater.Label>
   <MAP_Settings.AnnihilationCannonCrater.Description>开启后，湮灭炮将在命中地点生成一个深坑。同时影响我方太阳和敌方太阳。</MAP_Settings.AnnihilationCannonCrater.Description>
+  <MAP_Settings.SunSkillsWhileMoving.Label>允许「太阳」在移动时释放技能</MAP_Settings.SunSkillsWhileMoving.Label>
+  <MAP_Settings.SunSkillsWhileMoving.Description>开启后，允许「太阳」在移动时继续释放技能。仅对玩家方「太阳」生效。</MAP_Settings.SunSkillsWhileMoving.Description>
   <MAP_Settings.Group.SkillsAndOffspring>技能与繁育</MAP_Settings.Group.SkillsAndOffspring>
 
   <!-- 模块：工作标签页 -->

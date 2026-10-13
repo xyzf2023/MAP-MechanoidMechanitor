@@ -23,6 +23,8 @@
   <MAP_Settings.Group.Cores>Cores and abilities</MAP_Settings.Group.Cores>
   <MAP_Settings.AnnihilationCannonCrater.Label>Annihilation cannon leaves craters</MAP_Settings.AnnihilationCannonCrater.Label>
   <MAP_Settings.AnnihilationCannonCrater.Description>When enabled, the annihilation cannon creates a crater at its impact location. Affects both friendly and hostile Suns.</MAP_Settings.AnnihilationCannonCrater.Description>
+  <MAP_Settings.SunSkillsWhileMoving.Label>Allow Sun to cast abilities while moving</MAP_Settings.SunSkillsWhileMoving.Label>
+  <MAP_Settings.SunSkillsWhileMoving.Description>When enabled, Sun can continue casting abilities while moving. Applies only to player-controlled Suns.</MAP_Settings.SunSkillsWhileMoving.Description>
   <MAP_Settings.Group.SkillsAndOffspring>Skills and reproduction</MAP_Settings.Group.SkillsAndOffspring>
   <MAP_MechanoidMechanitor.Settings.WorkTab.Label>Show mechanoid mechanitors in the Work tab</MAP_MechanoidMechanitor.Settings.WorkTab.Label>
   <MAP_MechanoidMechanitor.Settings.WorkTab.Description>When enabled, eligible mechanoid mechanitors appear in the vanilla "Work" tab for adjusting work priorities. Disable this if it conflicts with mods that alter the Work tab or work priority interface.</MAP_MechanoidMechanitor.Settings.WorkTab.Description>

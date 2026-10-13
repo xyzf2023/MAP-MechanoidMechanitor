@@ -7,7 +7,7 @@ using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class JobDriver_HighEnergyLaserBeam : JobDriver
+    public sealed class JobDriver_HighEnergyLaserBeam : JobDriver_SunSkill
     {
         private int chargeTicks;
         private int firingTicks;
@@ -54,7 +54,7 @@ namespace MAP_MechanoidMechanitor
                 FinishVisuals();
                 SunSkillCooldown.Finish(pawn, job);
             });
-            yield return Toils_General.StopDead();
+            yield return MakeSkillStopToil();
 
             Toil charge = ToilMaker.MakeToil("HighEnergyLaserBeamCharge");
             charge.defaultCompleteMode = ToilCompleteMode.Never;
@@ -150,16 +150,14 @@ namespace MAP_MechanoidMechanitor
             if (recovering)
                 return pawn.Spawned && !pawn.Dead && !pawn.Downed && !pawn.InMentalState
                     && pawn.stances?.stunner?.Stunned != true
-                    && pawn.Map == castMap && pawn.Position == job.targetC.Cell
-                    && pawn.pather?.Moving != true
-                    && (pawn.stances?.FullBodyBusy != true || SunSkillCooldown.Owns(pawn, job));
+                    && CanMaintainSkillPosition(castMap, job.targetC.Cell);
             if (Laser?.CanOperate(pawn, allowUndrafted: !job.playerForced) != true) return false;
             // 关闭自由开火只终止自动施放；手动命令及已经开始的恢复阶段保持原行为。
             if (!job.playerForced && Laser.Props.allowAutoFire && !Laser.AutoFireEnabled) return false;
             // 玩家仍保留原有的部件检查周期；BOSS 部件真正损毁后当 tick 停止技能。
             if (pawn.GetComp<CompSunBossState>() != null && Laser.HasEmitter(pawn) != true) return false;
-            if (initialized && (pawn.Map != castMap || pawn.Position != job.targetC.Cell
-                || pawn.pather?.Moving == true || pawn.stances?.FullBodyBusy == true)) return false;
+            if (initialized && !CanMaintainSkillPosition(castMap, job.targetC.Cell, allowOwnedCooldown: false))
+                return false;
             if (!job.targetB.Cell.IsValid || !job.targetB.Cell.InBounds(pawn.Map)) return false;
             if (Sweeps) return job.targetA.Cell.IsValid && job.targetA.Cell.InBounds(pawn.Map);
             if (TargetsBuilding)

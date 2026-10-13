@@ -360,6 +360,11 @@ namespace MAP_MechanoidMechanitor
                 "MAP_Settings.AnnihilationCannonCrater.Description".Translate());
 
             listing.CheckboxLabeled(
+                "MAP_Settings.SunSkillsWhileMoving.Label".Translate(),
+                ref Settings.allowSunSkillsWhileMoving,
+                "MAP_Settings.SunSkillsWhileMoving.Description".Translate());
+
+            listing.CheckboxLabeled(
                 "MAP_Settings.PsychicCoreMentalStateRecovery.Label".Translate(),
                 ref Settings!.enableMaxLevelPsychicCoreMentalStateRecovery,
                 "MAP_Settings.PsychicCoreMentalStateRecovery.Description".Translate());

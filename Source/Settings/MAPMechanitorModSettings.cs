@@ -22,6 +22,9 @@ namespace MAP_MechanoidMechanitor
         /// <summary>默认开启；控制双方太阳湮灭炮生成深坑，不影响外圈地板和地基破坏。</summary>
         public bool enableAnnihilationCannonCrater = true;
 
+        /// <summary>默认关闭；每次技能开始时采样，仅允许玩家普通太阳边移动边施放。</summary>
+        public bool allowSunSkillsWhileMoving = false;
+
         public bool enablePortraitDisplayForAllSaves = false;
         /// <summary>默认显示主题详情；关闭后命运之轮仍发送不透露主题的中性信封。</summary>
         public bool showWheelOfFateThemeDetails = true;
@@ -538,6 +541,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref enableSunAutonomy, "enableSunAutonomy", true);
             Scribe_Values.Look(ref enableHermitAutonomy, "enableHermitAutonomy", true);
             Scribe_Values.Look(ref enableAnnihilationCannonCrater, "enableAnnihilationCannonCrater", true);
+            Scribe_Values.Look(ref allowSunSkillsWhileMoving, "allowSunSkillsWhileMoving", false);
             Scribe_Values.Look(ref showWheelOfFateThemeDetails, "showWheelOfFateThemeDetails", true);
             Scribe_Values.Look(ref playWheelOfFateThemeChangeSpecialSound, "playWheelOfFateThemeChangeSpecialSound", true);
             Scribe_Values.Look(ref lockWheelOfFateInitialTheme, "lockWheelOfFateInitialTheme", true);

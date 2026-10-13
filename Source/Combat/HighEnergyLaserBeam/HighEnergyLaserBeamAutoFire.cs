@@ -148,4 +148,39 @@ namespace MAP_MechanoidMechanitor
             if (job != null) pawn.jobs.StartJob(job, JobCondition.InterruptForced, cancelBusyStances: false);
         }
     }
+
+    /// <summary>普通移动途中沿用自由开火索敌；技能启动时由太阳共用衔接逻辑保留寻路。</summary>
+    [HarmonyPatch(typeof(JobDriver_Goto), "MakeNewToils")]
+    internal static class HighEnergyLaserBeamMovingAutoAttackPatch
+    {
+        private static IEnumerable<Toil> Postfix(IEnumerable<Toil> __result, JobDriver_Goto __instance)
+        {
+            foreach (Toil toil in __result)
+            {
+                // 新任务与读档重建均挂到行进步骤，不在到达后的瞬时步骤补发技能。
+                if (toil.defaultCompleteMode == ToilCompleteMode.PatherArrival)
+                    toil.AddPreTickAction(() => CheckForAutoCast(__instance));
+                yield return toil;
+            }
+        }
+
+        private static void CheckForAutoCast(JobDriver_Goto driver)
+        {
+            Pawn pawn = driver.pawn;
+            Job? movement = driver.job;
+            // 与待战的 4 tick 检查同频，并分散不同 Pawn 的索敌时机。
+            if (pawn?.jobs?.curDriver != driver || driver.ended || movement == null
+                || !pawn.IsHashIntervalTick(4) || pawn.pather?.Moving != true
+                || !SunSkillMovementUtility.AllowsNewCast(pawn) || !movement.canUseRangedWeapon
+                || !SunSkillMovementUtility.CanMove(pawn, movement)
+                || !pawn.jobs.IsCurrentJobPlayerInterruptible() || movement.def.forceCompleteBeforeNextJob) return;
+
+            CompHighEnergyLaserBeam? laser = pawn.GetComp<CompHighEnergyLaserBeam>();
+            // 复用射程、视线、敌对、部件、冷却和技能互斥检查；不另存自动施放状态。
+            Job? cast = laser?.TryMakeAutoFireJob();
+            if (cast != null)
+                pawn.jobs.StartJob(cast, JobCondition.InterruptForced, cancelBusyStances: false);
+            // 原版 DriverTick 在 preTickAction 后检查任务是否变化，不再更新已清理的 Goto。
+        }
+    }
 }

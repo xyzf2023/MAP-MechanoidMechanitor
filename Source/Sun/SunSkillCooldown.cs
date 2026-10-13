@@ -19,6 +19,10 @@ namespace MAP_MechanoidMechanitor
 
         internal bool BelongsTo(Job job) => ownerJobId == job.loadID;
 
+        // 保留展开/后摇计时，只解除本姿态对所属技能的移动限制。
+        public override bool StanceBusy => !(stanceTracker?.pawn.jobs?.curDriver is JobDriver_SunSkill driver
+            && driver.AllowsMovement && BelongsTo(driver.job));
+
         public override void ExposeData()
         {
             base.ExposeData();

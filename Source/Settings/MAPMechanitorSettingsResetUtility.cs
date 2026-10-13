@@ -108,6 +108,7 @@ namespace MAP_MechanoidMechanitor
                 case MAPSettingsSection.Cores:
                     settings.productivityCoreWorkSpeedOffsetPercentPerLevel = defaults.productivityCoreWorkSpeedOffsetPercentPerLevel;
                     settings.enableAnnihilationCannonCrater = defaults.enableAnnihilationCannonCrater;
+                    settings.allowSunSkillsWhileMoving = defaults.allowSunSkillsWhileMoving;
                     settings.enableMaxLevelPsychicCoreMentalStateRecovery = defaults.enableMaxLevelPsychicCoreMentalStateRecovery;
                     break;
                 case MAPSettingsSection.SkillsAndOffspring:

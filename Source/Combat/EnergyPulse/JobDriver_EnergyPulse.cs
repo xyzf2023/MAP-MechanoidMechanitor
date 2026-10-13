@@ -6,7 +6,7 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class JobDriver_EnergyPulse : JobDriver
+    public sealed class JobDriver_EnergyPulse : JobDriver_SunSkill
     {
         private int chargeTicks;
         private int chargeDuration;
@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor
                 if (HasAnimation) SunArmorPresentation.NotifySkillEnded(pawn, AnimationPose);
                 SunSkillCooldown.Finish(pawn, job);
             });
-            yield return Toils_General.StopDead();
+            yield return MakeSkillStopToil();
             Toil charge = ToilMaker.MakeToil("EnergyPulseCharge");
             charge.defaultCompleteMode = ToilCompleteMode.Never;
             charge.handlingFacing = true;
@@ -103,9 +103,7 @@ namespace MAP_MechanoidMechanitor
                 ? pawn.Spawned && !pawn.Dead && !pawn.Downed && !pawn.InMentalState
                     && pawn.stances?.stunner?.Stunned != true
                 : Pulse?.CanOperate(pawn) == true)
-            && (chargeDuration <= 0 || (pawn.Map == chargeMap && pawn.Position == chargePosition
-                && pawn.pather?.Moving != true
-                && (pawn.stances?.FullBodyBusy != true || SunSkillCooldown.Owns(pawn, job))));
+            && (chargeDuration <= 0 || CanMaintainSkillPosition(chargeMap, chargePosition));
 
         public override string GetReport() => recovering
             ? "MAP_SunSkill.PulseRecovery".Translate().Resolve() : base.GetReport();

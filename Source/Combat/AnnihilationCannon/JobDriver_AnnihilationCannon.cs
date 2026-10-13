@@ -7,7 +7,7 @@ using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class JobDriver_AnnihilationCannon : JobDriver
+    public sealed class JobDriver_AnnihilationCannon : JobDriver_SunSkill
     {
         private int chargeTicks;
         private int chargeDuration;
@@ -64,7 +64,7 @@ namespace MAP_MechanoidMechanitor
             });
 
             // 保留旧存档的 0=停止、1=蓄力、2=发射编号；新阶段追加并显式跳转。
-            Toil stop = Toils_General.StopDead();
+            Toil stop = MakeSkillStopToil();
             stop.handlingFacing = true;
             Toil opening = ToilMaker.MakeToil("AnnihilationOpening");
             Toil charge = ToilMaker.MakeToil("AnnihilationCharge");
@@ -72,7 +72,7 @@ namespace MAP_MechanoidMechanitor
             Toil recovery = ToilMaker.MakeToil("AnnihilationRecovery");
             stop.initAction = () =>
             {
-                pawn.pather.StopDead();
+                StopForSkill();
                 pawn.Rotation = Rot4.South;
                 InitializeSequence();
                 JumpToToil(opening);
@@ -213,10 +213,8 @@ namespace MAP_MechanoidMechanitor
                 chargePosition = pawn.Position;
                 chargeMap = pawn.Map;
             }
-            // StopDead 执行前允许 Pawn 仍在移动；开始蓄力后锁定地图和所在格。
-            return !chargePosition.IsValid || (pawn.Map == chargeMap && pawn.Position == chargePosition
-                && pawn.pather?.Moving != true
-                && (pawn.stances?.FullBodyBusy != true || SunSkillCooldown.Owns(pawn, job)));
+            // 入口前允许移动；初始化后始终锁定地图，移动许可只解除格子和寻路限制。
+            return !chargePosition.IsValid || CanMaintainSkillPosition(chargeMap, chargePosition);
         }
 
         private void FinishChargeVisuals()
