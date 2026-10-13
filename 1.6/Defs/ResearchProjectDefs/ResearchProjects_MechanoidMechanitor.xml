@@ -4,7 +4,7 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumMechtech</defName>
     <label>量子机械科技</label>
-    <description>通过对量子运算芯片的逆向分析，我们掌握了以量子运算系统处理机械意识、控制信号与多重任务的方法，为构建更先进的机械体及机械族控制技术奠定了基础。</description>
+    <description>通过对量子运算芯片的逆向分析，我们掌握了以量子运算系统处理机械意识、控制信号与多重任务的方法，为构建更先进的机械体及机械族控制技术奠定了基础。\n\n你可以通过让机械师召唤一个「正义」- 重装指挥单元并击败它以获得量子运算芯片。</description>
     <baseCost>10000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>

@@ -2,7 +2,7 @@
 <LanguageData>
   <!-- Source folder: Defs/ResearchProjectDefs -->
   <MAP_QuantumMechtech.label>Quantum mechtech</MAP_QuantumMechtech.label>
-  <MAP_QuantumMechtech.description>Reverse analysis of quantum computing chips has taught us to process mechanical consciousness, control signals, and multiple tasks with quantum computing systems, laying the groundwork for more advanced mechanoids and mechanoid control technology.</MAP_QuantumMechtech.description>
+  <MAP_QuantumMechtech.description>Reverse analysis of quantum computing chips has taught us to process mechanical consciousness, control signals, and multiple tasks with quantum computing systems, laying the groundwork for more advanced mechanoids and mechanoid control technology.\n\nYou can obtain a quantum computing chip by having a mechanitor summon a Justice - Heavy command unit and defeating it.</MAP_QuantumMechtech.description>
   <MAP_QuantumStructuralRestoration.label>Quantum structural restoration</MAP_QuantumStructuralRestoration.label>
   <MAP_QuantumStructuralRestoration.description>Use quantum computing to create highly precise state models of complete mechanoid structures, continuously comparing damaged parts against the reference structure to generate precise repair sequences that mechanoids can execute themselves.\n\nResearch this technology to unlock production of the repair beacon.</MAP_QuantumStructuralRestoration.description>
   <MAP_QuantumVacuumExtraction.label>Quantum vacuum extraction</MAP_QuantumVacuumExtraction.label>
