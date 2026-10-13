@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -30,7 +29,6 @@ namespace MAP_MechanoidMechanitor
         private const int BackupLetterDelayTicks = 600;
 
         private const int MinBackupLevel = 0;
-        private const int MaxBackupLevel = 20;
 
         private Dictionary<SkillDef, int> backedUpSkillLevels =
             new Dictionary<SkillDef, int>();
@@ -241,7 +239,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 合并技能等级到轨道备份。只增不减，等级限制在 0～20。
+        /// 合并基础技能等级到轨道备份。只增不减，仅限制非负，保留其他 MOD 提高的等级。
         /// </summary>
         public void MergeSkillLevel(SkillDef? skill, int level)
         {
@@ -252,7 +250,7 @@ namespace MAP_MechanoidMechanitor
 
             backedUpSkillLevels ??= new Dictionary<SkillDef, int>();
 
-            int clamped = Mathf.Clamp(level, MinBackupLevel, MaxBackupLevel);
+            int clamped = Math.Max(MinBackupLevel, level);
             if (backedUpSkillLevels.TryGetValue(skill, out int existing))
             {
                 if (clamped > existing)
@@ -286,7 +284,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 读档后的局部清理：丢弃空 SkillDef、把等级限制到 0～20、合并重复项。
+        /// 读档后的局部清理：丢弃空 SkillDef、把负等级归零、合并重复项，保留高于 20 的基础等级。
         /// 单个无效条目不会导致整个组件失效；旧存档缺少本字段时使用安全默认值。
         /// </summary>
         private static Dictionary<SkillDef, int> SanitizeBackup(
@@ -319,7 +317,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                int level = Mathf.Clamp(entry.Value, MinBackupLevel, MaxBackupLevel);
+                int level = Math.Max(MinBackupLevel, entry.Value);
                 if (result.TryGetValue(def, out int existing))
                 {
                     if (level > existing)
