@@ -22,6 +22,7 @@ namespace MAP_MechanoidMechanitor
 
         private Pawn? geneticParent;
         private PawnKindDef? childKindDef;
+        private string? childRaceDefName;
         private List<GeneDef>? endogeneSnapshot;
         private List<GeneDef>? xenogeneSnapshot;
         private bool inheritXenogenes;
@@ -42,6 +43,7 @@ namespace MAP_MechanoidMechanitor
         public void Initialize(
             Pawn geneticParentPawn,
             PawnKindDef offspringKind,
+            ThingDef offspringRace,
             List<GeneDef> endogenes,
             List<GeneDef> xenogenes,
             bool inheritXenogeneSnapshot,
@@ -49,12 +51,25 @@ namespace MAP_MechanoidMechanitor
         {
             geneticParent = geneticParentPawn;
             childKindDef = offspringKind;
+            childRaceDefName = offspringRace.defName;
             endogeneSnapshot = endogenes;
             xenogeneSnapshot = xenogenes;
             inheritXenogenes = inheritXenogeneSnapshot;
             fixedGender = offspringGender.HasValue ? (int)offspringGender.Value : -1;
             readyForBirthLetterSent = false;
             Severity = 0.001f;
+        }
+
+        internal bool TryResolveOffspringForBirth(out PawnKindDef? kind, out ThingDef? race, out string detail)
+        {
+            if (!SyntheticOffspringKindUtility.TryResolveForBirth(
+                    geneticParent, childKindDef, childRaceDefName, out kind, out race, out detail))
+                return false;
+
+            // 仅成功的旧快照迁移才写回；新快照不再依赖父母或当前 HAR 配置。
+            childKindDef = kind;
+            childRaceDefName = race!.defName;
+            return true;
         }
 
         public override void TickInterval(int delta)
@@ -211,6 +226,7 @@ namespace MAP_MechanoidMechanitor
             base.ExposeData();
             Scribe_References.Look(ref geneticParent, "geneticParent");
             Scribe_Defs.Look(ref childKindDef, "childKindDef");
+            Scribe_Values.Look(ref childRaceDefName, "childRaceDefName");
             Scribe_Collections.Look(ref endogeneSnapshot, "endogeneSnapshot", LookMode.Def);
             Scribe_Collections.Look(ref xenogeneSnapshot, "xenogeneSnapshot", LookMode.Def);
             Scribe_Values.Look(ref inheritXenogenes, "inheritXenogenes", false);

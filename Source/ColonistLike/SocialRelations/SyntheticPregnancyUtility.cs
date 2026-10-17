@@ -45,12 +45,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            PawnKindDef? childKind = spouse.kindDef;
-            if (childKind?.RaceProps == null)
+            if (!SyntheticOffspringKindUtility.TryResolveAtConception(
+                    spouse, out PawnKindDef? childKind, out ThingDef? childRace, out string resolutionDetail))
             {
-                Log.Error($"{LogPrefix}受孕失败：伴侣 {spouse} 没有有效 PawnKindDef。");
+                Log.Error($"{LogPrefix}受孕失败：{resolutionDetail}");
                 return;
             }
+            if (!string.IsNullOrEmpty(resolutionDetail))
+                Log.Warning($"{LogPrefix}{resolutionDetail}");
 
             bool inheritXenogenes =
                 MAPMechanitorMod.Settings?.syntheticOffspringInheritXenogenes ?? false;
@@ -68,7 +70,8 @@ namespace MAP_MechanoidMechanitor
                     pregnantCompanion);
                 pregnancy.Initialize(
                     spouse,
-                    childKind,
+                    childKind!,
+                    childRace!,
                     endogenes,
                     xenogenes,
                     inheritXenogenes,
@@ -83,7 +86,7 @@ namespace MAP_MechanoidMechanitor
 
             Log.Message(
                 $"{LogPrefix}{pregnantCompanion.LabelShort} 已受孕；遗传来源={spouse.LabelShort}，" +
-                $"kind={childKind.defName}，固定性别={fixedGender?.ToString() ?? "随机"}，" +
+                $"kind={childKind!.defName}，race={childRace!.defName}，固定性别={fixedGender?.ToString() ?? "随机"}，" +
                 $"继承异种基因={inheritXenogenes}。");
 
             try
@@ -107,19 +110,19 @@ namespace MAP_MechanoidMechanitor
         public static Pawn? TryCompleteBirth(Hediff_SyntheticPregnant pregnancy)
         {
             Pawn? pregnantCompanion = pregnancy.pawn;
-            PawnKindDef? kind = pregnancy.ChildKindDef;
             if (pregnantCompanion == null || pregnantCompanion.Dead)
             {
                 return null;
             }
 
-            if (kind?.RaceProps == null)
+            if (!pregnancy.TryResolveOffspringForBirth(
+                    out PawnKindDef? kind, out ThingDef? expectedRace, out string resolutionDetail))
             {
-                Log.Error(
-                    $"{LogPrefix}生产失败：受孕时保存的 PawnKindDef " +
-                    $"{kind?.defName ?? "<null>"} 无效。");
+                Log.Error($"{LogPrefix}生产失败，孕期保留：{resolutionDetail}");
                 return null;
             }
+            if (!string.IsNullOrEmpty(resolutionDetail))
+                Log.Warning($"{LogPrefix}{resolutionDetail}");
 
             List<GeneDef> endogenes = DistinctValid(pregnancy.EndogeneSnapshot);
             List<GeneDef> xenogenes = pregnancy.InheritXenogenes
@@ -136,7 +139,7 @@ namespace MAP_MechanoidMechanitor
             try
             {
                 PawnGenerationRequest request = new PawnGenerationRequest(
-                    kind,
+                    kind!,
                     pregnantCompanion.Faction,
                     PawnGenerationContext.NonPlayer,
                     forceGenerateNewPawn: false,
@@ -154,10 +157,12 @@ namespace MAP_MechanoidMechanitor
                     forceNoGear: true);
                 request.DontGivePreArrivalPathway = true;
                 child = PawnGenerator.GeneratePawn(request);
-                if (child == null || child.kindDef != kind)
+                if (child == null || child.kindDef != kind || child.def != expectedRace)
                 {
                     throw new InvalidOperationException(
-                        $"PawnGenerator 返回了错误 kind：{child?.kindDef?.defName ?? "<null>"}");
+                        $"PawnGenerator 返回了错误后代：kind={child?.kindDef?.defName ?? "<null>"}，"
+                        + $"race={child?.def?.defName ?? "<null>"}；"
+                        + $"预期 kind={kind!.defName}，race={expectedRace!.defName}。");
                 }
 
                 EnforceExactGenes(child, endogenes, xenogenes);
@@ -242,7 +247,7 @@ namespace MAP_MechanoidMechanitor
 
                 Log.Message(
                     $"{LogPrefix}{pregnantCompanion.LabelShort} 成功产下 {child.LabelShort} " +
-                    $"({kind.defName})。");
+                    $"({kind!.defName}, {expectedRace!.defName})。");
 
                 return child;
             }

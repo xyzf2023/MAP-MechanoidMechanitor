@@ -5,6 +5,7 @@ using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.FamilyRelationsAdoption;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.HumanoidAlienRaces;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MiliraRace;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MilianModification;
@@ -42,6 +43,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new DeadManSwitchCompatibility(),
             new FamilyRelationsAdoptionCompatibility(),
             new ForgenestCompatibility(),
+            new HarSyntheticOffspringCompatibility(),
             new MobileDragoonCompatibility(),
             new MiliraEquipmentCompatibility(),
             new MilianModificationCompatibility(MilianModificationCompatibility.Feature.TransitionAnchor),
