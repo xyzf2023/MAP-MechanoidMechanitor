@@ -73,6 +73,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new SRTSExpandedCompatibility(),
             new VanillaGravshipLaunchStateCompatibility(),
             new VanillaGravshipPilotCompatibility(),
+            new VanillaGravshipMaintenanceCompatibility(),
             new VanillaPsycastsExpandedCompatibility(),
             new WorkTabCompatibility(),
             new WorkTabPawnListCompatibility(),
