@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WvcWorkModes;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -84,7 +85,8 @@ namespace MAP_MechanoidMechanitor
                     && MechanoidMechanitorWorkModeUtility.SatisfiesVanillaWorkMode(mode, MechWorkModeDefOf.Work))
                     return true;
             }
-            return mode == null || mode == MechWorkModeDefOf.Work || mode == MechWorkModeDefOf.Recharge;
+            return mode == null || mode == MechWorkModeDefOf.Work || mode == MechWorkModeDefOf.Recharge
+                || WvcWorkModesServiceCompatibility.AllowsAutoSeek(pawn, mode);
         }
 
         public static bool HasEntryNeed(CompMechServiceStation station, Pawn pawn, bool forced)

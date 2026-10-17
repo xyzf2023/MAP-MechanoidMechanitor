@@ -24,6 +24,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VehicleFramework;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaGravshipExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WorkTab;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WvcWorkModes;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.YetAnotherOptimizer;
 using Verse;
 
@@ -79,6 +80,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new VanillaPsycastsExpandedCompatibility(),
             new WorkTabCompatibility(),
             new WorkTabPawnListCompatibility(),
+            new WvcWorkModesServiceCompatibility(safe: false),
+            new WvcWorkModesServiceCompatibility(safe: true),
             new YetAnotherOptimizerColonistBarCompatibility()
         };
 

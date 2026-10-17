@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WvcWorkModes;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -38,6 +39,10 @@ namespace MAP_MechanoidMechanitor
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
+            // 仅自动自行入站服从 WVC 安全模式；手动请求和搬运送达沿用现有规则。
+            AddFailCondition(() => !job.playerForced
+                && job.def == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+                && WvcWorkModesServiceCompatibility.ShouldYieldToSafety(pawn));
             AddFailCondition(() => Station == null || !MechServicePolicyUtility.IsAllowed(Station, pawn)
                 || Station.parent.IsForbidden(pawn)
                 || (job.def == MechServiceStationDefOf.MAP_Job_ReceiveMechService
