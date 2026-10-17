@@ -29,6 +29,7 @@
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
     <wantsThreatPoints>false</wantsThreatPoints>
     <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <gravShipsCanLandOn>true</gravShipsCanLandOn>
     <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
     <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
     <showFactionInInspectString>true</showFactionInInspectString>
@@ -43,6 +44,7 @@
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
     <wantsThreatPoints>false</wantsThreatPoints>
     <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <gravShipsCanLandOn>true</gravShipsCanLandOn>
     <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
     <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
     <showFactionInInspectString>true</showFactionInInspectString>
