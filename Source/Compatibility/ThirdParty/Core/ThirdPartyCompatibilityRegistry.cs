@@ -20,6 +20,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimTalk;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RPGStyleInventory;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VehicleFramework;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaGravshipExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WorkTab;
@@ -71,6 +72,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
+            new VehicleFrameworkOperatorCompatibility(),
             new VanillaGravshipLaunchStateCompatibility(),
             new VanillaGravshipPilotCompatibility(),
             new VanillaGravshipMaintenanceCompatibility(),
