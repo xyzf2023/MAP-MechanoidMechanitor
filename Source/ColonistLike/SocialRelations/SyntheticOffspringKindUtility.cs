@@ -63,10 +63,18 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            // 旧存档没有 race 快照。缺少原遗传来源时无法证明来源不是 HAR，保留孕期等待恢复。
-            if (source?.def == null)
+            // 缺少引用的旧档保留原 kind 生成语义；不能据此声称核验或重建了历史 HAR 种族。
+            // 调用方成功后保存 race 名称，后续重试/读档走上面的完整快照分支，不重复诊断。
+            if (source == null)
             {
-                detail = "旧孕期缺少种族快照且原 geneticParent 不可用，无法安全回填；孕期保留。";
+                race = kind!.race;
+                detail = "遗传来源缺失，无法核验或纠正历史HAR种族；保留旧快照。";
+                return true;
+            }
+
+            if (source.def == null)
+            {
+                detail = "旧孕期的原 geneticParent 仍存在但种族 Def 缺失，无法安全核验；孕期保留。";
                 return false;
             }
 
