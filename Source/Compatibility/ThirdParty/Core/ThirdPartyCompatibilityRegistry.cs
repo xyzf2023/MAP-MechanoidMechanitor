@@ -57,6 +57,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new PerspectiveShiftFireAtWillCompatibility(),
             new PerspectiveShiftScenarioCompatibility(),
             new RimTalkCompatibility(),
+            new RimTalkCatalystCompatibility(),
             new RimHUDRechargeButtonCompatibility(),
             new RimHUDPawnDisplayCompatibility(RimHUDPawnDisplayCompatibility.Feature.CompInfo),
             new RimHUDPawnDisplayCompatibility(RimHUDPawnDisplayCompatibility.Feature.Inspiration),
