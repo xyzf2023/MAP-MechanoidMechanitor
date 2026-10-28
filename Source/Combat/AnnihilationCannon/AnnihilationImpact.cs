@@ -8,7 +8,7 @@ using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>保存落点事务：正常 Kill 优先，爆炸结束后统一强制清理非 Pawn 残留。</summary>
+    /// <summary>保存落点事务：命中动画展开后开始正常 Kill，爆炸结束后统一强制清理非 Pawn 残留。</summary>
     public sealed class AnnihilationImpact : ThingWithComps
     {
         private Pawn? launcher;
@@ -36,12 +36,20 @@ namespace MAP_MechanoidMechanitor
 
         internal void Begin()
         {
-            if (phase != 0 || !Spawned) return;
-            phase = 1;
-            nextPhaseTick = Find.TickManager.TicksGame + settings.delayTicks;
-            RefreshInnerCells();
-            KillInnerThings();
-            KillInnerPawns();
+            if (phase != 0 || visualStartTick >= 0 || !Spawned || settings == null) return;
+            // phase 0 保留到展开完成；目标和遮挡在真正结算时收集，期间允许移动。
+            // 沿用后续阶段编号，旧档已完成的首轮 Kill 不会重跑。
+            nextPhaseTick = Find.TickManager.TicksGame + Mathf.Max(1, settings.expandTicks);
+            StartHitEffect();
+        }
+
+        private void StartHitEffect()
+        {
+            if (visualStartTick >= 0) return;
+            visualStartTick = Find.TickManager.TicksGame;
+            AnnihilationHitEffect.StartBlackout(this, settings.VisualDurationTicks);
+            DefDatabase<SoundDef>.GetNamedSilentFail("MAP_AnnihilationCannon_Expand")
+                ?.PlayOneShot(new TargetInfo(Position, Map));
         }
 
         private void RefreshInnerCells()
@@ -234,7 +242,6 @@ namespace MAP_MechanoidMechanitor
         {
             // 正常 Kill 成功的墙已移除；未被击毁的遮挡物保留到最终清场。
             RefreshInnerCells();
-            visualStartTick = Find.TickManager.TicksGame;
             // 立即复制爆炸前的遮挡快照；不使用被爆炸改变后的地图补算余波范围。
             outerCells = DamageDefOf.Bomb.Worker
                 .ExplosionCellsToHit(Position, Map, settings.outerRadius).ToList();
@@ -256,9 +263,8 @@ namespace MAP_MechanoidMechanitor
             // 本次发射者免疫自己的爆炸；原版会保存 ignoredThings，读档后仍有效。
             explosion.StartExplosion(null, launcher != null
                 ? new List<Thing> { launcher } : null);
-            AnnihilationHitEffect.StartBlackout(this, settings.VisualDurationTicks);
-            DefDatabase<SoundDef>.GetNamedSilentFail("MAP_AnnihilationCannon_Expand")
-                ?.PlayOneShot(new TargetInfo(Position, Map));
+            // 兼容旧档在首轮 Kill 后、动画尚未启动时保存；新攻击不会重播或重置计时。
+            StartHitEffect();
         }
 
         private void KillInnerPawns()
@@ -287,6 +293,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (AnnihilationWhitelistUtility.IsProtected(pawn)) return false;
             if (pawn == launcher) return false;
+            // 展开等待期间仍为 phase 0，不提前收集其他原因导致的死亡残留。
             if (!Spawned || phase < 1 || finalCleanupDone || pawn.MapHeld != Map) return false;
             return releasedPawns.Contains(pawn) || innerCells.Contains(pawn.PositionHeld);
         }
@@ -358,7 +365,7 @@ namespace MAP_MechanoidMechanitor
                 phase++;
                 nextPhaseTick = now + settings.delayTicks;
                 if (action == 1) StartOuterExplosion();
-                else if (action == 2)
+                else if (action == 0 || action == 2)
                 {
                     RefreshInnerCells();
                     KillInnerThings();
@@ -368,7 +375,7 @@ namespace MAP_MechanoidMechanitor
             }
             if (phase >= 4 && explosionEnded && !finalCleanupDone)
             {
-                // 爆炸晚于 T+9 到达的格子仍可能产生残留，完成后统一清理。
+                // 爆炸传播结束前仍可能产生残留，完成后统一清理。
                 CleanupResidues();
                 CreateAftermath();
                 finalCleanupDone = true;
