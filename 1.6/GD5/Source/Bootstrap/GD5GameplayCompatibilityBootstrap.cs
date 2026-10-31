@@ -22,6 +22,7 @@ namespace MAP_MechanoidMechanitor.GD5
             Install("modify-saving-mech", "动手脚资格", InstallModifySavingMech);
             Install("drysea", "枯海白花资格", InstallDrysea);
             Install("cataphract-weapon", "禁卫机械蜈蚣武器切换", InstallWeapon);
+            Install("cerebrex-takeover", "主脑接管结局", InstallTakeoverEnding);
             Install("cerebrex-research", "主脑接管集群科技", InstallTakeoverResearch);
             Install("purge-research", "肃清评级科技支持", InstallPurgeResearch);
             Install("cluster-receiver", "巨型集群接收器", InstallClusterReceiver);
@@ -91,6 +92,21 @@ namespace MAP_MechanoidMechanitor.GD5
             harmony.Patch(target, postfix: Patch(typeof(CataphractCentipedeWeaponCompatibilityPatch),
                 nameof(CataphractCentipedeWeaponCompatibilityPatch.Postfix)));
             CataphractCentipedeWeaponCompatibilityPatch.Configure(sr, fy, sound);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void InstallTakeoverEnding(Harmony harmony, ModContentPack mod)
+        {
+            if (!ModsConfig.OdysseyActive) return;
+
+            MethodInfo target = RequireMethod(typeof(CompCerebrexCore),
+                "DeactivateCore", typeof(void), new[] { typeof(bool) });
+            HarmonyMethod prefix = Patch(typeof(CerebrexTakeoverEndingCompatibilityPatch),
+                nameof(CerebrexTakeoverEndingCompatibilityPatch.Prefix));
+            // 这是 GD5 的 Harmony ID，不是其 packageId；接管须先于其摧毁分支处理。
+            prefix.before = new[] { "fxz.glitterworldDestroyer" };
+            prefix.priority = Priority.First;
+            harmony.Patch(target, prefix: prefix);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
