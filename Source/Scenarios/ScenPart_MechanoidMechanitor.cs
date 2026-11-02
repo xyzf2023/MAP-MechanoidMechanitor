@@ -21,7 +21,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private IEnumerable<PawnKindDef> PossibleMechs =>
             DefDatabase<PawnKindDef>.AllDefs.Where(kind =>
-                kind.RaceProps.IsMechanoid
+                kind?.race?.race?.IsMechanoid == true
+                && kind.race.comps != null
                 && kind.race.GetCompProperties<CompProperties_OverseerSubject>() != null);
 
         public void ApplyDefaultMechKind()
