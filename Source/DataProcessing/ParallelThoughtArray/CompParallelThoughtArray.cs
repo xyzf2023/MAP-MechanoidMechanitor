@@ -85,7 +85,11 @@ namespace MAP_MechanoidMechanitor
             Map map,
             DestroyMode mode = DestroyMode.Vanish)
         {
-            HandleRemovalCleanup();
+            // 飞船起飞只是暂时移出地图，保留目标供落地后恢复。
+            bool preserveTarget = mode == DestroyMode.WillReplace
+                                  && ModsConfig.OdysseyActive
+                                  && GravshipUtility.generatingGravship;
+            HandleRemovalCleanup(preserveTarget);
             base.PostDeSpawn(map, mode);
         }
 
@@ -98,18 +102,19 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        ///     建筑移除（拆除/摧毁）时只执行一次回收与清理。
+        ///     建筑离图时回收增幅；飞船转移时保留目标，永久移除时只清理一次。
         ///     此时 parent.Spawned 已为 false，EffectiveBoostPercent/IsOperating/IsProvidingBoostTo
         ///     全部不可用于判断移除前是否正在提供增幅，必须依靠 lastEffectiveBoostPercent。
         /// </summary>
-        private void HandleRemovalCleanup()
+        private void HandleRemovalCleanup(bool preserveTarget = false)
         {
             if (removalCleanupCompleted)
             {
                 return;
             }
 
-            removalCleanupCompleted = true;
+            // 临时离图后仍可能在落地前被销毁，届时必须允许永久清理。
+            removalCleanupCompleted = !preserveTarget;
 
             Pawn? oldTarget = target;
             int lostBoostPercent =
@@ -122,7 +127,10 @@ namespace MAP_MechanoidMechanitor
                     lostBoostPercent / 100f);
             }
 
-            target = null;
+            if (!preserveTarget)
+            {
+                target = null;
+            }
             lastEffectiveBoostPercent = 0;
             fallbackTickCounter = 0;
 
