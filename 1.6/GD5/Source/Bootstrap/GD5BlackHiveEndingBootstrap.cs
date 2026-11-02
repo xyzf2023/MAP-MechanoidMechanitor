@@ -72,7 +72,7 @@ namespace MAP_MechanoidMechanitor.GD5
         }
 
         private static bool RemoveMapPrefix(MapParent __instance) =>
-            GameComponent_GD5StoryState.Current?.KeepsTravelMap(__instance.Map) != true;
+            GameComponent_GD5StoryState.Current?.KeepsTravelMap(__instance) != true;
 
         private static void DrawPrefix(Rect inRect, out Rect __state)
         {

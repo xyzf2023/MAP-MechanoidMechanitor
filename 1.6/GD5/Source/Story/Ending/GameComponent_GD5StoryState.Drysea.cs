@@ -27,8 +27,12 @@ namespace MAP_MechanoidMechanitor.GD5
         private bool travelFailureReported;
 
         // 口袋地图依赖原地图；全员暂时离开任务地图时，也必须保留可返程的原地图。
-        internal bool KeepsTravelMap(Map? map) => HasVisit && dryseaVisit && map != null
-            && (map == returnMap || map == visitMap);
+        internal bool KeepsTravelMap(MapParent parent)
+        {
+            if (!HasVisit || !dryseaVisit) return false;
+            Map? map = parent.Map;
+            return map != null && (map == returnMap || map == visitMap);
+        }
 
         internal bool CanReturnFromDrysea(Pawn? target) => target != null && CanTalkTo(target)
             && returnMap != null && Find.Maps.Contains(returnMap);
