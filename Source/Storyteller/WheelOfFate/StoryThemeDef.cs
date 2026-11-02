@@ -24,6 +24,10 @@ namespace MAP_MechanoidMechanitor
         public float positiveRandomIncidentWeightFactor = 1f;
         // 补充由执行代码指定正面信件、而非在 IncidentDef 中声明信件类型的事件。
         public List<IncidentDef> positiveRandomIncidents = new List<IncidentDef>();
+        // 补充由执行代码指定中性信件或消息的事件。
+        public List<IncidentDef> neutralRandomIncidents = new List<IncidentDef>();
+        // 补充由执行代码指定负面信件、而非在 IncidentDef 中声明信件类型的事件。
+        public List<IncidentDef> negativeRandomIncidents = new List<IncidentDef>();
         public bool requiresActivatedMonolith;
         public PsychicRitualDef_VoidProvocation? initialVoidProvocation;
         public LetterDef? letterDef;
@@ -263,6 +267,30 @@ namespace MAP_MechanoidMechanitor
                         yield return "命运之轮主题：正面随机事件补充名单须包含有效事件引用。";
                     else if (!incidents.Add(incident))
                         yield return $"命运之轮主题：正面随机事件 {incident.defName} 重复配置。";
+                }
+            }
+
+            if (neutralRandomIncidents != null)
+            {
+                var incidents = new HashSet<IncidentDef>();
+                foreach (IncidentDef incident in neutralRandomIncidents)
+                {
+                    if (incident == null)
+                        yield return "命运之轮主题：中性随机事件补充名单须包含有效事件引用。";
+                    else if (!incidents.Add(incident))
+                        yield return $"命运之轮主题：中性随机事件 {incident.defName} 重复配置。";
+                }
+            }
+
+            if (negativeRandomIncidents != null)
+            {
+                var incidents = new HashSet<IncidentDef>();
+                foreach (IncidentDef incident in negativeRandomIncidents)
+                {
+                    if (incident == null)
+                        yield return "命运之轮主题：负面随机事件补充名单须包含有效事件引用。";
+                    else if (!incidents.Add(incident))
+                        yield return $"命运之轮主题：负面随机事件 {incident.defName} 重复配置。";
                 }
             }
 

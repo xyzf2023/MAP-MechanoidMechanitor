@@ -77,6 +77,8 @@ namespace MAP_MechanoidMechanitor
             if (theme?.equalIncidentWeights == true)
             {
                 if (UniformCandidates(target, candidates.Select(entry => entry.category))
+                    .Where(incident => theme.triggerLinkedIncident != true
+                        || themeState == null || themeState.AllowsCausalMainIncident(incident.def))
                     .TryRandomElement(out var uniformIncident))
                     yield return uniformIncident;
                 yield break;

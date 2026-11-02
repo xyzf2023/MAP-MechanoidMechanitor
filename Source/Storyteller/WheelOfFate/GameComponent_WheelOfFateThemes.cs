@@ -20,6 +20,8 @@ namespace MAP_MechanoidMechanitor
         private bool announcementPending;
         private bool initialThemeHandled;
         private bool initialThemePending;
+        // -1 表示本周期尚无成功发生的主事件，也兼容旧存档。
+        private int lastCausalMainSeverity = -1;
         private WheelOfFateExtraIncidents extraIncidents = new WheelOfFateExtraIncidents();
 
         public GameComponent_WheelOfFateThemes(Game game) { }
@@ -53,10 +55,20 @@ namespace MAP_MechanoidMechanitor
             // 已有主题记录的旧存档视为已经开始推演，不覆盖原周期。
             Scribe_Values.Look(ref initialThemeHandled, "initialThemeHandled", currentTheme != null);
             Scribe_Values.Look(ref initialThemePending, "initialThemePending", false);
+            Scribe_Values.Look(ref lastCausalMainSeverity, "lastCausalMainSeverity", -1);
             Scribe_Deep.Look(ref extraIncidents, "extraIncidents");
             if (Scribe.mode == LoadSaveMode.PostLoadInit && extraIncidents == null)
                 extraIncidents = new WheelOfFateExtraIncidents();
         }
+
+        internal bool AllowsCausalMainIncident(IncidentDef incident)
+        {
+            WheelOfFateIncidentSeverity severity = WheelOfFateIncidentSeverityUtility.GetSeverity(incident);
+            return severity != WheelOfFateIncidentSeverity.Unknown && lastCausalMainSeverity != (int)severity;
+        }
+
+        internal void RecordCausalMainIncident(IncidentDef incident) =>
+            lastCausalMainSeverity = (int)WheelOfFateIncidentSeverityUtility.GetSeverity(incident);
 
         public override void GameComponentTick()
         {
@@ -198,6 +210,7 @@ namespace MAP_MechanoidMechanitor
 
         private void BeginTheme(StorytellerDef storyteller, StoryThemeDef next, bool forceAnnouncement = false)
         {
+            lastCausalMainSeverity = -1;
             initialThemeHandled = true;
             initialThemePending = false;
             announcementPending |= forceAnnouncement || ownerStoryteller != storyteller || currentTheme != next;

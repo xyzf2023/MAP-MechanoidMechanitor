@@ -6,10 +6,32 @@
     <description>关于因果关联性的推演。触发事件的概率大幅提升，且所有的事件将以相同的概率发生。当发生一个事件时，会同时触发另一个事件。</description>
     <themePoolTag>MAP_WheelOfFate</themePoolTag>
     <selectionWeight>0.5</selectionWeight>
-    <durationDays>3~15</durationDays>
-    <incidentIntervalFactor>0.2</incidentIntervalFactor>
+    <durationDays>3~5</durationDays>
+    <incidentIntervalFactor>0.6</incidentIntervalFactor>
     <letterDef>NeutralEvent</letterDef>
     <equalIncidentWeights>true</equalIncidentWeights>
     <triggerLinkedIncident>true</triggerLinkedIncident>
+    <!-- 补充在事件执行代码中指定信件类型的原版事件。 -->
+    <positiveRandomIncidents>
+      <li>ResourcePodCrash</li>
+      <li>FarmAnimalsWanderIn</li>
+      <li>PsychicSoothe</li>
+      <li>SelfTame</li>
+      <li>ThrumboPasses</li>
+      <li>TraderCaravanArrival</li>
+      <li>OrbitalTraderArrival</li>
+      <li>RaidFriendly</li>
+      <li MayRequire="Ludeon.RimWorld.Royalty">CaravanArrivalTributeCollector</li>
+    </positiveRandomIncidents>
+    <neutralRandomIncidents>
+      <li>ShipChunkDrop</li>
+      <li>VisitorGroup</li>
+    </neutralRandomIncidents>
+    <negativeRandomIncidents>
+      <li>PsychicDrone</li>
+      <li>ShortCircuit</li>
+      <li>CropBlight</li>
+      <li>Alphabeavers</li>
+    </negativeRandomIncidents>
   </MAP_MechanoidMechanitor.StoryThemeDef>
 </Defs>

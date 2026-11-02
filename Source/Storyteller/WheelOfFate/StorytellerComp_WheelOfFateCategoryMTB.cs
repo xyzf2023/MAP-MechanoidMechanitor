@@ -25,6 +25,8 @@ namespace MAP_MechanoidMechanitor
                 StorytellerComp_WheelOfFateRandomMain? main = Find.Storyteller.storytellerComps
                     .OfType<StorytellerComp_WheelOfFateRandomMain>().FirstOrDefault();
                 if (main != null && main.UniformCandidates(target, new[] { Props.category })
+                    .Where(incident => theme.triggerLinkedIncident != true
+                        || state == null || state.AllowsCausalMainIncident(incident.def))
                     .TryRandomElement(out var uniformIncident))
                     yield return uniformIncident;
                 yield break;

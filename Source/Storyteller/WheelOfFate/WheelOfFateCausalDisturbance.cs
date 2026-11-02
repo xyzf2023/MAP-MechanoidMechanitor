@@ -19,7 +19,6 @@ namespace MAP_MechanoidMechanitor
             GameComponent_WheelOfFateThemes? state = GameComponent_WheelOfFateThemes.Current;
             state?.UpdateTheme();
             if (state?.ActiveTheme?.triggerLinkedIncident != true) return;
-
             // 保护整个选取和执行过程，包含其他补丁或 Worker 引发的嵌套事件。
             firingLinkedIncident = true;
             try
@@ -27,7 +26,16 @@ namespace MAP_MechanoidMechanitor
                 StorytellerComp_WheelOfFateRandomMain? comp = __instance.storytellerComps
                     .OfType<StorytellerComp_WheelOfFateRandomMain>().FirstOrDefault();
                 if (comp == null) return;
+                // 基地和世界杂项的等权事件均由主组件创建；独立调度不能覆盖其历史。
+                if (fi.source == comp) state.RecordCausalMainIncident(fi.def);
+                WheelOfFateIncidentSeverity mainSeverity = WheelOfFateIncidentSeverityUtility.GetSeverity(fi.def);
+                if (mainSeverity == WheelOfFateIncidentSeverity.Unknown) return;
                 if (comp.UniformCandidates(fi.parms.target, excluded: fi.def)
+                    .Where(candidate =>
+                    {
+                        WheelOfFateIncidentSeverity severity = WheelOfFateIncidentSeverityUtility.GetSeverity(candidate.def);
+                        return severity != WheelOfFateIncidentSeverity.Unknown && severity <= mainSeverity;
+                    })
                     .TryRandomElement(out var linked))
                     __instance.TryFire(linked);
             }
