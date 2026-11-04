@@ -49,6 +49,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new MobileDragoonCompatibility(),
             new MiliraEquipmentCompatibility(),
             new MiliraAutoSuitCompatibility(),
+            new MiliraButcheryCompatibility(),
             new MilianModificationCompatibility(MilianModificationCompatibility.Feature.TransitionAnchor),
             new MilianModificationCompatibility(MilianModificationCompatibility.Feature.SelfInstallation),
             new MilianModificationCompatibility(MilianModificationCompatibility.Feature.AbilityCooldown),
