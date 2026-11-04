@@ -5,6 +5,8 @@
   <MAP_Annihilation.Unavailable>当前不可用。</MAP_Annihilation.Unavailable>
   <MAP_Annihilation.EmitterMissing>湮灭炮发射器已损坏</MAP_Annihilation.EmitterMissing>
   <MAP_Annihilation.Cooldown>冷却： {0} 秒。</MAP_Annihilation.Cooldown>
+  <MAP_Annihilation.EnergyCost>每次发射消耗{0}机械能量。</MAP_Annihilation.EnergyCost>
+  <MAP_Annihilation.NotEnoughEnergy>发射湮灭炮需要至少{0}机械能量。</MAP_Annihilation.NotEnoughEnergy>
   <MAP_Annihilation.Timing>蓄力时长受瞄准时间影响。当前蓄力：{n}秒。</MAP_Annihilation.Timing>
   <MAP_Annihilation.Report.Opening>正在展开湮灭炮。</MAP_Annihilation.Report.Opening>
   <MAP_Annihilation.Report.Recovery>正在收回湮灭炮。</MAP_Annihilation.Report.Recovery>

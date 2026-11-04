@@ -5,6 +5,8 @@
   <MAP_Annihilation.Unavailable>Currently unavailable.</MAP_Annihilation.Unavailable>
   <MAP_Annihilation.EmitterMissing>Annihilation cannon launcher damaged</MAP_Annihilation.EmitterMissing>
   <MAP_Annihilation.Cooldown>Cooldown: {0} seconds.</MAP_Annihilation.Cooldown>
+  <MAP_Annihilation.EnergyCost>Each shot consumes {0} mechanoid energy.</MAP_Annihilation.EnergyCost>
+  <MAP_Annihilation.NotEnoughEnergy>Firing the annihilation cannon requires at least {0} mechanoid energy.</MAP_Annihilation.NotEnoughEnergy>
   <MAP_Annihilation.Timing>Charge time is affected by aiming time. Current charge time: {n} seconds.</MAP_Annihilation.Timing>
   <MAP_Annihilation.Report.Opening>Deploying annihilation cannon.</MAP_Annihilation.Report.Opening>
   <MAP_Annihilation.Report.Recovery>Retracting annihilation cannon.</MAP_Annihilation.Report.Recovery>

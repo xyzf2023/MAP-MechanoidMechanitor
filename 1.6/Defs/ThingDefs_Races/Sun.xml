@@ -30,7 +30,8 @@
         <minRange>5.9</minRange>
         <projectileSpeed>75</projectileSpeed>
         <phaseDelayTicks>3</phaseDelayTicks>
-        <cooldownTicks>2500</cooldownTicks>
+        <cooldownTicks>0</cooldownTicks>
+        <energyCostFraction>0.3</energyCostFraction>
         <effectExpandTicks>15</effectExpandTicks>
         <effectHoldTicks>60</effectHoldTicks>
         <effectContractTicks>20</effectContractTicks>

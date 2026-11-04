@@ -72,6 +72,11 @@ namespace MAP_MechanoidMechanitor
             Toil recovery = ToilMaker.MakeToil("AnnihilationRecovery");
             stop.initAction = () =>
             {
+                if (Cannon == null || !Cannon.HasEnoughEnergy(pawn))
+                {
+                    EndJobWith(JobCondition.InterruptForced);
+                    return;
+                }
                 StopForSkill();
                 pawn.Rotation = Rot4.South;
                 InitializeSequence();
@@ -144,7 +149,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
                 // Toil 切换到发射时再验证一次，受控/位移后不能补发已经取消的攻击。
-                if (!CanContinue() || Cannon == null)
+                if (!CanContinue() || Cannon == null || !Cannon.TryConsumeEnergy(pawn))
                 {
                     EndJobWith(JobCondition.InterruptForced);
                     return;

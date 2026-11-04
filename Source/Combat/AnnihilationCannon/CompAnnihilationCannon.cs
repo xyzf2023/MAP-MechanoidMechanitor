@@ -23,6 +23,7 @@ namespace MAP_MechanoidMechanitor
         public float projectileSpeed = 75f;
         public int phaseDelayTicks = 3;
         public int cooldownTicks = 360;
+        public float energyCostFraction;
         public int effectExpandTicks = 15;
         public int effectHoldTicks = 60;
         public int effectContractTicks = 20;
@@ -37,6 +38,8 @@ namespace MAP_MechanoidMechanitor
             foreach (string error in base.ConfigErrors(parentDef)) yield return error;
             if (warmupTicks < 1 || phaseDelayTicks < 1 || cooldownTicks < 0)
                 yield return "湮灭炮蓄力、阶段间隔必须为正，冷却不得为负。";
+            if (!(energyCostFraction >= 0f) || energyCostFraction > 1f)
+                yield return "湮灭炮能量消耗必须在最大能量的 0 到 1 倍之间。";
             if (deployTicks < 1 || brakeTicks < 1 || alignTicks < 1 || closeTicks < 1)
                 yield return "湮灭炮固定展开、制动、归位和收拢时长必须为正。";
             if (!(innerRadius > 0f) || innerRadius > GenRadial.MaxRadialPatternRadius
@@ -92,10 +95,23 @@ namespace MAP_MechanoidMechanitor
         internal void NotifyLaunched() => readyTick = Find.TickManager.TicksGame
             + (parent.GetComp<CompSunBossState>()?.Stage.CannonCooldown ?? Props.cooldownTicks);
 
+        internal bool HasEnoughEnergy(Pawn actor) => Props.energyCostFraction <= 0f
+            || (MechanicalFlightEnergyUtility.TryGetEnergyFraction(actor, out float energy)
+                && energy + 0.000001f >= Props.energyCostFraction);
+
+        internal bool TryConsumeEnergy(Pawn actor)
+        {
+            if (Props.energyCostFraction <= 0f) return true;
+            return MechanicalFlightEnergyUtility.TryGetEnergyFraction(actor, out float energy)
+                && energy + 0.000001f >= Props.energyCostFraction
+                && MechanicalFlightEnergyUtility.TrySetEnergyFraction(actor, energy - Props.energyCostFraction);
+        }
+
         /// <summary>玩家与 BOSS 共用创建入口；只在真正发射时提交冷却。</summary>
         public Job? TryMakeCastJob(IntVec3 cell)
         {
             if (!(parent is Pawn actor) || !CanOperate(actor) || Find.TickManager.TicksGame < readyTick
+                || !HasEnoughEnergy(actor)
                 || !ValidTarget(actor, cell)) return null;
             Job job = JobMaker.MakeJob(AnnihilationCannonDefOf.MAP_AnnihilationCannon, cell);
             job.playerForced = actor.Faction == Faction.OfPlayer;
@@ -124,7 +140,9 @@ namespace MAP_MechanoidMechanitor
                 // defaultDesc 是 string；TaggedString 的隐式转换会 StripTags，必须显式保留富文本。
                 defaultDesc = "MAP_Annihilation.Description".Translate().Resolve() + "\n\n"
                     + "MAP_Annihilation.Timing".Translate(
-                        (WarmupTicksFor(actor) / 60f).ToString("0.##").Named("n")).Resolve(),
+                        (WarmupTicksFor(actor) / 60f).ToString("0.##").Named("n")).Resolve()
+                    + (Props.energyCostFraction > 0f ? "\n" + "MAP_Annihilation.EnergyCost".Translate(
+                        (Props.energyCostFraction * 100f).ToString("0.##") + "%").Resolve() : ""),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_AnnihilationCannon"),
                 action = () => BeginTargeting(actor)
             };
@@ -133,6 +151,9 @@ namespace MAP_MechanoidMechanitor
             else if (Find.TickManager.TicksGame < readyTick)
                 command.Disable("MAP_Annihilation.Cooldown".Translate(
                     ((readyTick - Find.TickManager.TicksGame) / 60f).ToString("0.0")));
+            else if (!HasEnoughEnergy(actor))
+                command.Disable("MAP_Annihilation.NotEnoughEnergy".Translate(
+                    (Props.energyCostFraction * 100f).ToString("0.##") + "%"));
             yield return command;
         }
 
