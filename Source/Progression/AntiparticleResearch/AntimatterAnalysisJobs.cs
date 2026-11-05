@@ -23,37 +23,44 @@ namespace MAP_MechanoidMechanitor
                     && pawn.CanReserve(bench) && pawn.CanReserve(bench.Position)
                     && pawn.CanReserve(bench.InteractionCell)) as Building_ResearchBench;
 
-        internal static Job? MakeJob(Pawn pawn, Thing device, bool forced) =>
-            MakeJob(pawn, device, forced, out _);
+        internal static Job? MakeJob(Pawn pawn, Thing device, bool forced)
+        {
+            if (!TryResolveBench(pawn, device, forced, out Building_ResearchBench? bench, out _))
+                return null;
+
+            Job job = JobMaker.MakeJob(AntiparticleResearchDefOf.MAP_AnalyzeAntimatterContainmentDevice,
+                device, bench!, bench!.Position);
+            job.count = 1;
+            return job;
+        }
 
         // 菜单说明与实际派工共用校验，避免显示的禁用原因与执行条件不一致。
-        internal static Job? MakeJob(Pawn pawn, Thing device, bool forced, out string disabledReasonKey)
+        internal static bool TryResolveBench(Pawn pawn, Thing device, bool forced,
+            out Building_ResearchBench? bench, out string disabledReasonKey)
         {
+            bench = null;
             disabledReasonKey = "MAP_Antiparticle.Unavailable";
             if (!pawn.Spawned || !Qualified(pawn) || GameComponent_AntiparticleResearch.Discovered
                 || !device.Spawned || device.Map != pawn.Map || device.TryGetComp<CompAntimatterAnalysis>() == null
                 || (!forced && device.IsForbidden(pawn)))
-                return null;
+                return false;
             if (!pawn.CanReach(device, PathEndMode.ClosestTouch, Danger.Some))
             {
                 disabledReasonKey = "MAP_Antiparticle.ItemUnreachable";
-                return null;
+                return false;
             }
             if (!pawn.CanReserve(device))
             {
                 disabledReasonKey = "MAP_Antiparticle.AnalysisInProgress";
-                return null;
+                return false;
             }
-            Building_ResearchBench? bench = FindBench(pawn);
+            bench = FindBench(pawn);
             if (bench == null)
             {
                 disabledReasonKey = "MAP_Antiparticle.NoResearchBench";
-                return null;
+                return false;
             }
-            Job job = JobMaker.MakeJob(AntiparticleResearchDefOf.MAP_AnalyzeAntimatterContainmentDevice,
-                device, bench, bench.Position);
-            job.count = 1;
-            return job;
+            return true;
         }
     }
 
@@ -80,7 +87,7 @@ namespace MAP_MechanoidMechanitor
                 yield return new FloatMenuOption(label + ": " + "MAP_Antiparticle.SkillRequired".Translate(), null);
                 yield break;
             }
-            if (AntimatterAnalysisUtility.MakeJob(pawn, clickedThing, true, out string disabledReasonKey) == null)
+            if (!AntimatterAnalysisUtility.TryResolveBench(pawn, clickedThing, true, out _, out string disabledReasonKey))
             {
                 yield return new FloatMenuOption(label + ": " + disabledReasonKey.Translate(), null);
                 yield break;
@@ -107,7 +114,7 @@ namespace MAP_MechanoidMechanitor
 
         public override bool HasJobOnThing(Pawn pawn, Thing t, bool forced = false) =>
             t.TryGetComp<CompAntimatterAnalysis>()?.Requested == true
-            && AntimatterAnalysisUtility.MakeJob(pawn, t, forced) != null;
+            && AntimatterAnalysisUtility.TryResolveBench(pawn, t, forced, out _, out _);
 
         public override Job? JobOnThing(Pawn pawn, Thing t, bool forced = false) =>
             AntimatterAnalysisUtility.MakeJob(pawn, t, forced);
