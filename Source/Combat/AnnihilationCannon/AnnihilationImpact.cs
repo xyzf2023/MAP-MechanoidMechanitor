@@ -24,6 +24,7 @@ namespace MAP_MechanoidMechanitor
         private List<IntVec3> outerCells = new List<IntVec3>();
         private List<Pawn> releasedPawns = new List<Pawn>();
         private List<AnnihilationResidue> residues = new List<AnnihilationResidue>();
+        private readonly Dictionary<Thing, AnnihilationResidue> residueByThing = new Dictionary<Thing, AnnihilationResidue>();
         // 使用 ID 而非对象引用：正常 Kill 后对象可能已被丢弃，读档仍不能重复主动 Kill。
         private List<string> attemptedKillIds = new List<string>();
         private readonly HashSet<string> attemptedKills = new HashSet<string>();
@@ -301,18 +302,25 @@ namespace MAP_MechanoidMechanitor
         internal void RecordResidue(Thing thing, int originalCount)
         {
             if (!IsPhysicalThing(thing) || thing is Pawn || AnnihilationWhitelistUtility.IsProtected(thing)) return;
-            AnnihilationResidue? existing = residues.FirstOrDefault(r => r.thing == thing);
-            if (existing != null) existing.originalCount = Math.Min(existing.originalCount, originalCount);
-            else residues.Add(new AnnihilationResidue { thing = thing, originalCount = originalCount });
+            if (residueByThing.TryGetValue(thing, out AnnihilationResidue existing))
+                existing.originalCount = Math.Min(existing.originalCount, originalCount);
+            else
+            {
+                AnnihilationResidue residue = new AnnihilationResidue { thing = thing, originalCount = originalCount };
+                residues.Add(residue);
+                residueByThing.Add(thing, residue);
+            }
         }
 
         private void CleanupResidues()
         {
+            using IDisposable captureBatch = AnnihilationDeathCapture.BeginBatch(Map);
             HashSet<Thing> handled = new HashSet<Thing>();
             for (int pass = 0; pass < 8; pass++)
             {
                 AnnihilationResidue[] pending = residues.ToArray();
                 residues.Clear();
+                residueByThing.Clear();
                 foreach (AnnihilationResidue residue in pending)
                 {
                     Thing? thing = residue.thing;
@@ -368,8 +376,11 @@ namespace MAP_MechanoidMechanitor
                 else if (action == 0 || action == 2)
                 {
                     RefreshInnerCells();
-                    KillInnerThings();
-                    KillInnerPawns();
+                    using (AnnihilationDeathCapture.BeginBatch(Map))
+                    {
+                        KillInnerThings();
+                        KillInnerPawns();
+                    }
                 }
                 // phase 3 仅保留原有阶段间隔及存档编号，清场统一等待爆炸结束。
             }
@@ -419,6 +430,22 @@ namespace MAP_MechanoidMechanitor
                 releasedPawns.RemoveAll(p => p == null);
                 residues ??= new List<AnnihilationResidue>();
                 residues.RemoveAll(r => r == null || r.thing == null);
+                residueByThing.Clear();
+                int residueCount = 0;
+                for (int i = 0; i < residues.Count; i++)
+                {
+                    AnnihilationResidue residue = residues[i];
+                    Thing thing = residue.thing!;
+                    if (residueByThing.TryGetValue(thing, out AnnihilationResidue existing))
+                        existing.originalCount = Math.Min(existing.originalCount, residue.originalCount);
+                    else
+                    {
+                        residueByThing.Add(thing, residue);
+                        residues[residueCount++] = residue;
+                    }
+                }
+                // 存档仍使用原列表；旧档重复项合并为最小基线，运行时索引不另行序列化。
+                if (residueCount < residues.Count) residues.RemoveRange(residueCount, residues.Count - residueCount);
                 attemptedKillIds ??= new List<string>();
                 // 旧档保持已有 phase，不补跑落地阶段；新增去重字段缺失时从空集合开始。
                 attemptedKills.Clear();
