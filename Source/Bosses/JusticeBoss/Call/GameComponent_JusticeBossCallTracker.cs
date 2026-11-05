@@ -101,10 +101,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_References.Look(ref justicePawn, "justiceBossPawn");
             Scribe_Values.Look(ref questId, "justiceBossQuestId", -1);
 
-            if (Scribe.mode == LoadSaveMode.PostLoadInit)
-            {
-                ValidateOrClear();
-            }
+            // 地图 Pawn 在 PostLoadInit 尚未 Spawn；依赖位置的校验统一留到 FinalizeInit。
         }
 
         public void ValidateOrClear()
