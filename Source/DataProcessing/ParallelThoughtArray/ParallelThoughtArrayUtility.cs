@@ -11,6 +11,66 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class ParallelThoughtArrayUtility
     {
+        // 只在集中兜底刷新的一次同步调用内有效，不跨 Tick、地图或存档保留。
+        private static Dictionary<Pawn, int>? periodicRefreshTotals;
+        private static bool periodicRefreshRunning;
+
+        internal static void InvalidatePeriodicRefreshTotals()
+        {
+            periodicRefreshTotals = null;
+        }
+
+        internal static void RefreshAllArrayTargets()
+        {
+            if (periodicRefreshRunning || Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress
+                || LongEventHandler.AnyEventNowOrWaiting)
+                return;
+
+            periodicRefreshRunning = true;
+            try
+            {
+                var arrays = new List<CompParallelThoughtArray>();
+                foreach (Map map in Find.Maps)
+                {
+                    List<Building> buildings = map.listerBuildings.AllBuildingsColonistOfDef(
+                        MAPMechanitor_ThingDefOf.MAP_ParallelThoughtArray);
+                    foreach (Building building in buildings)
+                    {
+                        CompParallelThoughtArray? comp = building.TryGetComp<CompParallelThoughtArray>();
+                        if (comp != null)
+                            arrays.Add(comp);
+                    }
+                }
+
+                // 先快照再通知健康系统；任何实际下降必须先走原有安全回收。
+                foreach (CompParallelThoughtArray comp in arrays)
+                    if (comp.parent.Spawned)
+                        comp.ReevaluateOperatingState(false);
+
+                var totals = new Dictionary<Pawn, int>();
+                foreach (CompParallelThoughtArray comp in arrays)
+                {
+                    Pawn? target = comp.Target;
+                    if (target == null || !comp.parent.Spawned)
+                        continue;
+                    totals.TryGetValue(target, out int current);
+                    totals[target] = (int)Math.Min(int.MaxValue,
+                        (long)current + Math.Max(0, comp.EffectiveBoostPercent));
+                }
+
+                periodicRefreshTotals = totals;
+                // 健康回调可使静态缓存失效，不会改变本次目标快照。
+                foreach (Pawn target in totals.Keys)
+                    DynamicConsciousnessBonusUtility.RefreshForPawn(target);
+            }
+            finally
+            {
+                periodicRefreshTotals = null;
+                periodicRefreshRunning = false;
+            }
+        }
+
         public const int MinBoostPercent = 100;
 
         // 仅作为 int 存档与加法的技术安全护栏，不作为平衡上限。
@@ -125,6 +185,9 @@ namespace MAP_MechanoidMechanitor
                 return 0;
             }
 
+            if (periodicRefreshTotals != null)
+                return periodicRefreshTotals.TryGetValue(target, out int cached) ? cached : 0;
+
             long total = 0L;
             List<Map> maps = Find.Maps;
             for (int i = 0; i < maps.Count; i++)
@@ -174,6 +237,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void RefreshTargetDynamicConsciousness(Pawn? target)
         {
+            // 显式改绑、增幅改变及停电通知总是读取最新真实状态。
+            InvalidatePeriodicRefreshTotals();
             DynamicConsciousnessBonusUtility.RefreshForPawn(target);
         }
 
@@ -215,6 +280,25 @@ namespace MAP_MechanoidMechanitor
                     comp?.ClearTargetFromExternalInvalidation(target);
                 }
             }
+        }
+    }
+
+    /// <summary>合并各阵列的健康状态周期兜底，每个目标每周期只刷新一次。</summary>
+    public sealed class GameComponent_ParallelThoughtArrayRefresh : GameComponent
+    {
+        private int ticksUntilRefresh = ParallelThoughtArrayUtility.FallbackRefreshIntervalTicks;
+
+        public GameComponent_ParallelThoughtArrayRefresh(Game game)
+        {
+        }
+
+        public override void GameComponentTick()
+        {
+            base.GameComponentTick();
+            if (--ticksUntilRefresh > 0)
+                return;
+            ticksUntilRefresh = ParallelThoughtArrayUtility.FallbackRefreshIntervalTicks;
+            ParallelThoughtArrayUtility.RefreshAllArrayTargets();
         }
     }
 }

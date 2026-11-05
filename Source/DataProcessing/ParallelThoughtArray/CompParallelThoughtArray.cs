@@ -277,7 +277,9 @@ namespace MAP_MechanoidMechanitor
                 >= Mathf.Max(1, Props.fallbackRefreshIntervalTicks))
             {
                 fallbackTickCounter = 0;
-                ReevaluateOperatingState(true);
+                // 定期重读 Def 电力参数；稳定目标的健康兜底由统一组件合并处理。
+                cachedPowerBoostPercent = -1;
+                ReevaluateOperatingState(false);
             }
         }
 
@@ -744,6 +746,8 @@ namespace MAP_MechanoidMechanitor
             Pawn overseer,
             float consciousnessOffsetLoss)
         {
+            // 回收会触发健康重算，不能沿用集中刷新开始时的增幅快照。
+            ParallelThoughtArrayUtility.InvalidatePeriodicRefreshTotals();
             GameComponent_DataProcessingAllocationRegistry? registry =
                 GameComponent_DataProcessingAllocationRegistry
                     .CurrentRegistry;
