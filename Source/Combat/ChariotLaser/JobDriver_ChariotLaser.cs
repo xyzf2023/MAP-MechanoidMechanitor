@@ -127,6 +127,8 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 ApplyEnergyInterval(props);
+                if (pawn.jobs?.curDriver != this || !CanContinueCommon())
+                    return;
             }
 
             damageTickAccumulator++;
@@ -134,6 +136,8 @@ namespace MAP_MechanoidMechanitor
             {
                 damageTickAccumulator = 0;
                 ApplyDamageInterval(props);
+                if (pawn.jobs?.curDriver != this || !CanContinueCommon())
+                    return;
             }
 
             if (firingTicks >= MaximumFiringTicks(props))
@@ -253,31 +257,37 @@ namespace MAP_MechanoidMechanitor
             float ignitionChance)
         {
             // 两种激光共用此入口；发射者不承受自身激光伤害或附带点燃。
-            if (thing == pawn || damageDef == null || thing.Destroyed || amount <= 0f)
+            if (thing == pawn || damageDef == null || thing.Destroyed || amount <= 0f
+                || !thing.Spawned || thing.Map != pawn.Map
+                || pawn.jobs?.curDriver != this || !CanContinueCommon())
             {
                 return;
             }
 
+            Map map = thing.Map;
             thing.TakeDamage(new DamageInfo(
                 damageDef,
                 amount,
                 armorPenetration,
                 -1f,
                 pawn));
-            if (!thing.Destroyed)
+            if (!thing.Destroyed && thing.Spawned && thing.Map == map && pawn.Map == map
+                && pawn.jobs?.curDriver == this && CanContinueCommon())
             {
                 TryIgniteOnce(thing, ignitionChance);
             }
         }
 
-        protected IEnumerable<Thing> ThingsInRadius(
+        protected List<Thing> ThingsInRadius(
             IntVec3 center,
             float radius)
         {
+            // 先完整快照再施伤；死亡/摧毁会修改格子列表，不能边遍历边回调。
+            var snapshot = new List<Thing>();
             Map? map = pawn.Map;
             if (map == null)
             {
-                yield break;
+                return snapshot;
             }
 
             HashSet<int> yielded = new HashSet<int>();
@@ -299,10 +309,11 @@ namespace MAP_MechanoidMechanitor
                         && !thing.Destroyed
                         && yielded.Add(thing.thingIDNumber))
                     {
-                        yield return thing;
+                        snapshot.Add(thing);
                     }
                 }
             }
+            return snapshot;
         }
 
         public override void ExposeData()
@@ -379,6 +390,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 主目标死亡后可能已离图；溅射使用本次命中前的位置与目标集合。
+            List<Thing> nearby = ThingsInRadius(target.Position, props.effectRadius);
             if (target is Pawn)
             {
                 ApplyDamage(
@@ -389,9 +402,7 @@ namespace MAP_MechanoidMechanitor
                     props.trackingIgnitionChance);
             }
 
-            foreach (Thing thing in ThingsInRadius(
-                         target.Position,
-                         props.effectRadius))
+            foreach (Thing thing in nearby)
             {
                 if (thing is Pawn && thing != target)
                 {
