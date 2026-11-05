@@ -15,7 +15,18 @@ namespace MAP_MechanoidMechanitor
     public static class MechFusionTeardownService
     {
         private const int RestoreSearchRadius = 8;
-        private const int MaxPendingRecoveryAttempts = 600;
+        internal const int MaxPendingRecoveryAttempts = 600;
+
+        private static void ReportRecoveryFailure(
+            MechFusionSession session, string phase, bool error, string message)
+        {
+            if (!session.ShouldReportRecoveryFailure(phase))
+                return;
+            if (error)
+                Log.Error(message);
+            else
+                Log.Warning(message);
+        }
 
         public static bool TryTeardown(
             MechFusionSession? session,
@@ -122,7 +133,7 @@ namespace MAP_MechanoidMechanitor
             {
                 // 任何未预期异常都保留会话并标记延迟重试，绝不静默吞掉真实 Pawn。
                 session.TeardownDeferred = true;
-                Log.Error(
+                ReportRecoveryFailure(session, "transaction-exception", true,
                     "[MAP-机械族机械师] 解除合体事务发生异常，已保留会话等待重试：" +
                     $"session={session.SessionId}：{ex}");
                 return false;
@@ -133,6 +144,7 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? source = session.SourcePawn;
             Pawn? wearer = session.WearerPawn;
+            session.WaitingForWearerContainer = false;
 
             if (source == null)
             {
@@ -151,6 +163,7 @@ namespace MAP_MechanoidMechanitor
                 bool firstWait = !session.IsPendingRecovery;
                 session.SetState(MechFusionSessionState.PendingRecovery);
                 session.TeardownDeferred = false;
+                session.WaitingForWearerContainer = true;
                 if (firstWait)
                     MechFusionStatCacheUtility.Invalidate(session);
                 return false;
@@ -188,14 +201,14 @@ namespace MAP_MechanoidMechanitor
                             session.PendingMap,
                             session.PendingPosition,
                             session.PendingRotation);
-                        Log.Warning(
+                        ReportRecoveryFailure(session, "container-unavailable", false,
                             "[MAP-机械族机械师] 合体解除时找不到安全容器，" +
                             "源 Pawn 已安全保留并等待恢复：" +
                             $"pawn={source.LabelShort}（{source.ThingID}）。");
                     }
                     else
                     {
-                        Log.Error(
+                        ReportRecoveryFailure(session, "container-restore-failed", true,
                             "[MAP-机械族机械师] 合体解除时源 Pawn 无法恢复合法容器，" +
                             "已保留会话等待重试：" +
                             $"pawn={source.LabelShort}（{source.ThingID}）。");
@@ -220,7 +233,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     session.SetState(MechFusionSessionState.Ending);
                     session.TeardownDeferred = true;
-                    Log.Error(
+                    ReportRecoveryFailure(session, "transformation-restore-failed", true,
                         "[MAP-机械族机械师] 合体解除后未能恢复形态记录，" +
                         "已保留会话继续尝试修复，不视为完全结束：" +
                         $"pawn={source.LabelShort}（{source.ThingID}）。");
@@ -269,7 +282,7 @@ namespace MAP_MechanoidMechanitor
             if (!CanDeleteSession(session, source))
             {
                 session.TeardownDeferred = true;
-                Log.Warning(
+                ReportRecoveryFailure(session, "completion-incomplete", false,
                     "[MAP-机械族机械师] 合体解除收束条件尚未全部满足，" +
                     "已保留会话等待下一轮校验：" +
                     $"session={session.SessionId}。");
@@ -305,7 +318,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Log.Error(
+            ReportRecoveryFailure(session, "source-reference-lost", true,
                 "[MAP-机械族机械师] 合体解除时源 Pawn 引用已确定永久丢失，" +
                 "只能清理目标人类上的本 MOD 效果、临时飞行授权与合体服装，" +
                 "不生成替代 Pawn：" +
@@ -343,7 +356,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (!MechanicalFlightEmergencyUtility.TryCrashImmediately(wearer))
                 {
-                    Log.Warning(
+                    ReportRecoveryFailure(session, "crash-deferred", false,
                         "[MAP-机械族机械师] 合体空中退出时无法立即进入坠毁流程，" +
                         "等待飞行系统清理：" +
                         $"pawn={wearer.LabelShort}（{wearer.ThingID}）。");
@@ -378,7 +391,7 @@ namespace MAP_MechanoidMechanitor
                 if (!MechFusionFlightUtility.TryRevokeTemporaryFlight(session))
                 {
                     session.TeardownDeferred = true;
-                    Log.Warning(
+                    ReportRecoveryFailure(session, "flight-revoke-deferred", false,
                         "[MAP-机械族机械师] 临时飞行授权尚未撤销完成，" +
                         "已保留会话等待下一轮清理：" +
                         $"session={session.SessionId}。");
@@ -401,7 +414,7 @@ namespace MAP_MechanoidMechanitor
                 if (!MechFusionHealthEffectManager.RevokeAll(session, wearer))
                 {
                     session.TeardownDeferred = true;
-                    Log.Warning(
+                    ReportRecoveryFailure(session, "health-revoke-deferred", false,
                         "[MAP-机械族机械师] 至少一条合体健康状态尚未撤销完成，" +
                         "已保留会话等待下一轮清理：" +
                         $"session={session.SessionId}。");
@@ -445,7 +458,7 @@ namespace MAP_MechanoidMechanitor
 
             session.SetState(MechFusionSessionState.Ending);
             session.TeardownDeferred = true;
-            Log.Warning(
+            ReportRecoveryFailure(session, "energy-writeback-deferred", false,
                 "[MAP-机械族机械师] 源机械族已恢复，但最终能源暂时无法写入，" +
                 "已保留合体会话等待下一轮重试：" +
                 $"pawn={source.LabelShort}（{source.ThingID}），" +
@@ -525,7 +538,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            Log.Warning(
+            ReportRecoveryFailure(session, "transformation-force-restore", false,
                 "[MAP-机械族机械师] 形态记录无法通过标准入口恢复，" +
                 "尝试强制恢复并解除载体链接：" +
                 $"pawn={source.LabelShort}（{source.ThingID}）。");
@@ -737,7 +750,7 @@ namespace MAP_MechanoidMechanitor
                     source,
                     session.OriginalControlGroupIndex))
             {
-                Log.Warning(
+                ReportRecoveryFailure(session, "control-group-restore-failed", false,
                     "[MAP-机械族机械师] 已恢复合体源机械族阵营和监管者，" +
                     "但无法精确恢复原控制组位置：" +
                     $"source={source.LabelShort}（{source.ThingID}），" +
@@ -827,7 +840,7 @@ namespace MAP_MechanoidMechanitor
             Pawn source,
             Pawn? wearer)
         {
-            Log.Error(
+            ReportRecoveryFailure(session, "source-unrecoverable", true,
                 "[MAP-机械族机械师] 合体解除时源 Pawn 已被销毁或永久丢弃，" +
                 "无法恢复原 Pawn；将保留会话直到目标人类上的临时效果全部清理完成，" +
                 "且不会生成任何复制 Pawn：" +
@@ -926,9 +939,9 @@ namespace MAP_MechanoidMechanitor
             {
                 session.SetState(MechFusionSessionState.Ending);
                 session.TeardownDeferred = true;
-                Log.Error(
+                ReportRecoveryFailure(session, "unrecoverable-cleanup-incomplete", true,
                     "[MAP-机械族机械师] 源 Pawn 不可恢复时仍有合体清理步骤未完成，" +
-                    "已保留权威会话等待下一 Tick 重试：" +
+                    "已保留权威会话等待后续重试：" +
                     $"session={session.SessionId}。");
                 return;
             }
@@ -1013,9 +1026,9 @@ namespace MAP_MechanoidMechanitor
                 || !session.ApparelRemoved)
             {
                 session.TeardownDeferred = true;
-                Log.Error(
+                ReportRecoveryFailure(session, "lost-source-cleanup-incomplete", true,
                     "[MAP-机械族机械师] 源 Pawn 引用永久丢失后仍有合体清理步骤未完成，" +
-                    "已保留权威会话等待下一 Tick 重试：" +
+                    "已保留权威会话等待后续重试：" +
                     $"session={session.SessionId}。");
                 return;
             }
@@ -1037,7 +1050,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                Log.Error(
+                ReportRecoveryFailure(session, "cleanup-step:" + stepName, true,
                     "[MAP-机械族机械师] 合体异常清理步骤失败（" + stepName + "）：" +
                     $"session={session.SessionId}：{ex}");
                 return false;
@@ -1062,6 +1075,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             apparel.Destroy(DestroyMode.Vanish);
+        }
+
+        internal static bool HasFinishedWaitingForWearerContainer(MechFusionSession session)
+        {
+            return session.WaitingForWearerContainer
+                && (session.SourcePawn == null
+                    || !ShouldWaitForWearerContainer(session, session.SourcePawn));
         }
 
         private static bool ShouldWaitForWearerContainer(MechFusionSession session, Pawn source)

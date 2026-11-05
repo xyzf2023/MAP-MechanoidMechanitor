@@ -179,15 +179,30 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (session.IsEnding && session.TeardownDeferred)
+                if ((session.IsEnding && session.TeardownDeferred) || session.IsPendingRecovery)
                 {
-                    MechFusionTeardownService.TryResumeDeferredTeardown(session);
-                    continue;
-                }
+                    int now = GenTicks.TicksGame;
+                    if (now < session.NextRecoveryAttemptTick
+                        && !MechFusionTeardownService.HasFinishedWaitingForWearerContainer(session))
+                    {
+                        continue;
+                    }
 
-                if (session.IsPendingRecovery)
-                {
-                    MechFusionTeardownService.TryRecoverPendingSession(session);
+                    // 正常飞行收尾保持逐 tick 响应；真正的恢复失败每 60 tick 重试。
+                    // 缺少源引用时仍保留原有观察窗口，不因节流延长永久丢失判定。
+                    bool needsImmediateCheck = MechanicalFlightUtility.IsAirborne(session.WearerPawn)
+                        || (session.SourcePawn == null
+                            && session.PendingRecoveryAttempts
+                                < MechFusionTeardownService.MaxPendingRecoveryAttempts);
+                    session.NextRecoveryAttemptTick = now + (needsImmediateCheck ? 1 : 60);
+                    if (session.IsPendingRecovery)
+                    {
+                        MechFusionTeardownService.TryRecoverPendingSession(session);
+                    }
+                    else
+                    {
+                        MechFusionTeardownService.TryResumeDeferredTeardown(session);
+                    }
                     continue;
                 }
 

@@ -69,8 +69,18 @@ namespace MAP_MechanoidMechanitor
         private ThingWithComps? sourceWeapon;
         private bool weaponsRestored;
         private int pendingRecoveryAttempts;
+        // 失败重试节流与日志去重只属于本次运行；读档允许立即再尝试并报告一次。
+        internal int NextRecoveryAttemptTick;
+        internal bool WaitingForWearerContainer;
+        private HashSet<string>? reportedRecoveryFailures;
         private Dictionary<StatDef, float>? offsetLookup;
         private Dictionary<StatDef, float>? factorLookup;
+
+        internal bool ShouldReportRecoveryFailure(string phase)
+        {
+            reportedRecoveryFailures ??= new HashSet<string>();
+            return reportedRecoveryFailures.Add(phase);
+        }
 
         public string SessionId
         {
