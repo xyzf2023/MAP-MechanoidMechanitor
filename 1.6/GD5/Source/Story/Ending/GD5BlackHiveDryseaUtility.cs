@@ -57,16 +57,36 @@ namespace MAP_MechanoidMechanitor.GD5
         internal static bool TryFindCell(Map map, IntVec3 center, out IntVec3 result)
         {
             // 优先入口/原位置附近，拥挤时仍允许 Pawn 共用格子，不把人数限制在固定半径内。
-            IntVec3 fallback = IntVec3.Invalid;
-            foreach (IntVec3 cell in map.AllCells.OrderBy(c => c.DistanceToSquared(center)))
+            if (center.InBounds(map) && center.Standable(map) && !center.ContainsStaticFire(map)
+                && center.GetFirstPawn(map) == null)
             {
-                if (!cell.Standable(map) || cell.ContainsStaticFire(map)) continue;
-                if (!fallback.IsValid) fallback = cell;
-                if (cell.GetFirstPawn(map) != null) continue;
-                result = cell;
+                result = center;
                 return true;
             }
-            result = fallback;
+
+            result = IntVec3.Invalid;
+            IntVec3 fallback = IntVec3.Invalid;
+            int nearestFreeDistance = int.MaxValue;
+            int nearestFallbackDistance = int.MaxValue;
+            // 一次扫描取最小值，避免每名往返角色分配并排序整张地图。
+            // 严格小于保留原 AllCells 顺序下的等距选择，与稳定 OrderBy 一致。
+            foreach (IntVec3 cell in map.AllCells)
+            {
+                int distance = cell.DistanceToSquared(center);
+                if (distance >= nearestFreeDistance && distance >= nearestFallbackDistance) continue;
+                if (!cell.Standable(map) || cell.ContainsStaticFire(map)) continue;
+                if (distance < nearestFallbackDistance)
+                {
+                    fallback = cell;
+                    nearestFallbackDistance = distance;
+                }
+                if (distance < nearestFreeDistance && cell.GetFirstPawn(map) == null)
+                {
+                    result = cell;
+                    nearestFreeDistance = distance;
+                }
+            }
+            if (!result.IsValid) result = fallback;
             return result.IsValid;
         }
 
