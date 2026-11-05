@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- 源文件目录：Defs -->
+  <MAP_SunEnergyCouplingBridge.label>Sun energy coupling bridge</MAP_SunEnergyCouplingBridge.label>
+  <MAP_SunEnergyCouplingBridge.labelNoun>a Sun energy coupling bridge</MAP_SunEnergyCouplingBridge.labelNoun>
+  <MAP_SunEnergyCouplingBridge.description>An advanced energy coupling device designed specifically for Sun. It converts the enormous output of the antimatter reactor into a stable electrical supply and feeds it directly into the colony power grid through wireless power transmission. Once installed, Sun can still supply the colony with power while in mechanoid form.</MAP_SunEnergyCouplingBridge.description>
+  <MAP_SunEnergyCouplingBridge.descriptionShort>An advanced energy coupling device that lets Sun supply the colony with power even in mechanoid form.</MAP_SunEnergyCouplingBridge.descriptionShort>
+</LanguageData>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="QCWF_MechBodyPartBionicBase">
+    <defName>MAP_SunEnergyCouplingBridge</defName>
+    <label>太阳-能流耦合桥</label>
+    <description>专为「太阳」设计的先进能源耦合装置，能够将反物质反应堆产生的庞大能量转化为稳定的电力输出，并通过无线能量传输技术直接接入殖民地电网。安装后，可以使「太阳」在机械体形态时仍能为殖民地提供一定的电量。</description>
+    <costList>
+      <Plasteel>200</Plasteel>
+      <Uranium>40</Uranium>
+      <Gold>20</Gold>
+      <ComponentSpacer>8</ComponentSpacer>
+      <PrecisionDeck>100</PrecisionDeck>
+      <PrecisionArmorParts>30</PrecisionArmorParts>
+    </costList>
+    <recipeMaker>
+      <researchPrerequisite>QCWF_MechanicalModification</researchPrerequisite>
+      <researchPrerequisites>
+        <li>MAP_AntiparticleApplications</li>
+      </researchPrerequisites>
+    </recipeMaker>
+    <descriptionHyperlinks>
+      <HediffDef>MAP_SunEnergyCouplingBridge</HediffDef>
+    </descriptionHyperlinks>
+    <comps>
+      <li Class="MK3expand.CompProperties_ItemTargetable">
+        <compClass>MK3expand.CompTargetable_PlayerMech</compClass>
+        <avaliableRaces>
+          <li>MAP_Mech_Sun</li>
+        </avaliableRaces>
+        <conflictHediff>MAP_SunEnergyCouplingBridge</conflictHediff>
+      </li>
+      <li Class="MK3expand.CompProperties_TargetEffectAffectPawn">
+        <compClass>MK3expand.CompTargetEffect_GiveHediffToPlayMech</compClass>
+        <jobDef>QCWFJob_GiveHediffToMech</jobDef>
+        <hediffDef>MAP_SunEnergyCouplingBridge</hediffDef>
+        <applyToWholeBody>true</applyToWholeBody>
+        <moteDef>Mote_ResurrectFlash</moteDef>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <HediffDef ParentName="QCWF_MechImplantHediffBase">
+    <defName>MAP_SunEnergyCouplingBridge</defName>
+    <label>太阳-能流耦合桥</label>
+    <labelNoun>太阳-能流耦合桥</labelNoun>
+    <description>专为「太阳」设计的先进能源耦合装置，能够将反物质反应堆产生的庞大能量转化为稳定的电力输出，并通过无线能量传输技术直接接入殖民地电网。安装后，可以使「太阳」在机械体形态时仍能为殖民地提供一定的电量。</description>
+    <descriptionShort>先进的能源耦合装置，使「太阳」在机械体形态时仍能为殖民地供电。</descriptionShort>
+    <descriptionHyperlinks>
+      <ThingDef>MAP_SunEnergyCouplingBridge</ThingDef>
+    </descriptionHyperlinks>
+    <spawnThingOnRemoved>MAP_SunEnergyCouplingBridge</spawnThingOnRemoved>
+    <comps>
+      <li Class="MK3expand.HediffCompProperties_ModificationRecord">
+        <modificationThing>MAP_SunEnergyCouplingBridge</modificationThing>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <translationKeys>
+          <li>MAP_SunEnergyCouplingBridge_Power</li>
+        </translationKeys>
+      </li>
+    </comps>
+  </HediffDef>
+</Defs>
