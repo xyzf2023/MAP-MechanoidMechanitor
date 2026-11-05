@@ -505,9 +505,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RecalculateGoodwillSituations();
             // 旧存档兼容：为已存在但尚未拥有自定义支援 QuestPart 的进行中 Gravcore_Mechhive 任务补装。
             SymbiosisCovenantCerebrexSupportUtility.BackfillMissingSupportQuestParts();
+            RebuildPostQuestContinuationIndex();
         }
 
         private int postQuestContinuationTick = -1;
+        // 仅为运行时索引；业务状态仍由原任务 Part 存档，读档后一次性重建。
+        private readonly HashSet<QuestPart_SymbiosisCovenantCerebrexSupport> postQuestContinuations =
+            new HashSet<QuestPart_SymbiosisCovenantCerebrexSupport>();
+        private readonly List<QuestPart_SymbiosisCovenantCerebrexSupport> postQuestContinuationBuffer =
+            new List<QuestPart_SymbiosisCovenantCerebrexSupport>();
+
+        private void RebuildPostQuestContinuationIndex()
+        {
+            postQuestContinuations.Clear();
+            postQuestContinuationBuffer.Clear();
+            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
+                RegisterPostQuestContinuations(quest);
+        }
+
+        internal void RegisterPostQuestContinuations(Quest quest)
+        {
+            if (!quest.Historical) return;
+            foreach (QuestPart part in quest.PartsListForReading)
+                if (part is QuestPart_SymbiosisCovenantCerebrexSupport support)
+                    RefreshPostQuestContinuation(support);
+        }
+
+        internal void RefreshPostQuestContinuation(QuestPart_SymbiosisCovenantCerebrexSupport support)
+        {
+            if (support.quest?.Historical == true && support.NeedsPostQuestContinuation
+                && support.site != null && !support.site.Destroyed)
+                postQuestContinuations.Add(support);
+            else
+                postQuestContinuations.Remove(support);
+        }
+
+        internal void RemovePostQuestContinuations(Quest quest)
+        {
+            postQuestContinuations.RemoveWhere(support => support.quest == quest);
+        }
 
         public override void GameComponentTick()
         {
@@ -536,6 +572,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         private void TickPostQuestContinuation()
         {
+            if (postQuestContinuations.Count == 0) return;
             int now = Find.TickManager.TicksGame;
             SymbiosisCovenantCerebrexSupportDef cfg =
                 SymbiosisCovenantCerebrexSupportDefOf.MAP_SymbiosisCovenant_CerebrexSupportConfig;
@@ -548,22 +585,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
             postQuestContinuationTick = now;
 
             // 注意：不得受 IsActive 限制。盟约关闭后，已部署的援军仍需完成撤离。
-            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
+            // 回调可能完成、删除或登记任务，使用复用快照避免枚举期间修改集合。
+            postQuestContinuationBuffer.Clear();
+            postQuestContinuationBuffer.AddRange(postQuestContinuations);
+            try
             {
-                if (!quest.Historical)
+                foreach (QuestPart_SymbiosisCovenantCerebrexSupport support in postQuestContinuationBuffer)
                 {
-                    continue;
-                }
-
-                foreach (QuestPart part in quest.PartsListForReading)
-                {
-                    if (part is QuestPart_SymbiosisCovenantCerebrexSupport support
-                        && support.site?.Map != null)
+                    if (!postQuestContinuations.Contains(support)) continue;
+                    RefreshPostQuestContinuation(support);
+                    if (!postQuestContinuations.Contains(support)) continue;
+                    Map? map = support.SupportMap;
+                    if (map == null || map.Disposed || !Find.Maps.Contains(map)) continue;
+                    try
                     {
-                        support.ContinueAfterQuestHistorical(support.site.Map, now);
+                        support.ContinueAfterQuestHistorical(map, now);
                     }
+                    catch (Exception ex)
+                    {
+                        Log.ErrorOnce("[MAP-机械族机械师] 主脑援军历史任务续跑失败：" + ex,
+                            support.quest.id ^ 0x51414355);
+                    }
+                    if (postQuestContinuations.Contains(support)) RefreshPostQuestContinuation(support);
                 }
             }
+            finally { postQuestContinuationBuffer.Clear(); }
         }
 
         private void TrySendAllianceGuidanceLetter()

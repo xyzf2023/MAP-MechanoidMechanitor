@@ -53,6 +53,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
     [HarmonyPatch(typeof(QuestManager), nameof(QuestManager.Remove))]
     internal static class MechanoidMechanitorQuestRemovedPatch
     {
+        public static void Postfix(QuestManager __instance, Quest quest)
+        {
+            if (quest != null && !__instance.Contains(quest))
+                GameComponent_SymbiosisCovenantState.CurrentComponent?.RemovePostQuestContinuations(quest);
+        }
+
         public static void Prefix(QuestManager __instance, Quest quest)
         {
             if (quest == null || !__instance.Contains(quest))

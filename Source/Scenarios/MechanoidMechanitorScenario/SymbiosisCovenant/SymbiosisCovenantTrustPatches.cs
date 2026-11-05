@@ -271,6 +271,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPostfix]
         public static void Postfix(Quest __instance, QuestRewardState __state)
         {
+            // 撤离不依赖盟约当前开关或任务成功奖励；所有已历史化的支援均交给活动索引。
+            GameComponent_SymbiosisCovenantState.CurrentComponent?.RegisterPostQuestContinuations(__instance);
             // 只有本次调用真正把任务结束为成功才结算，兼容其他补丁跳过原方法的情况。
             if (__instance.State != QuestState.EndedSuccess)
             {

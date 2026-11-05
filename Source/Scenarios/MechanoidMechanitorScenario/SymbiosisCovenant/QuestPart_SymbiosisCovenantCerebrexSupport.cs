@@ -561,6 +561,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 nextThreatCheckTick = now + Config.threatCheckIntervalTicks;
             }
 
+            // 防御解除可能晚于任务结束；补登记此次才进入撤离阶段的历史任务。
+            GameComponent_SymbiosisCovenantState.CurrentComponent?.RefreshPostQuestContinuation(this);
             Log.Message($"{LogPrefix} 主脑防御已解除（site={site?.Label}）。");
         }
 
@@ -710,6 +712,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             stage = CerebrexSupportStage.Completed;
+            GameComponent_SymbiosisCovenantState.CurrentComponent?.RefreshPostQuestContinuation(this);
             if (sendEvacDoneMessage)
             {
                 Messages.Message(
@@ -775,6 +778,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public void MarkInvalid(string reason)
         {
             stage = CerebrexSupportStage.Invalid;
+            GameComponent_SymbiosisCovenantState.CurrentComponent?.RefreshPostQuestContinuation(this);
             invalidReason = reason;
             Log.Warning($"{LogPrefix} 进入 Invalid：{reason}");
         }
