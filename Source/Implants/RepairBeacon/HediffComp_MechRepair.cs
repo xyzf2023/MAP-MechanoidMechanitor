@@ -6,7 +6,9 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed class HediffComp_MechRepair : HediffComp
     {
+        private const int RepairEligibilityCheckIntervalTicks = 30;
         private int ticksUntilRepair;
+        private int pendingRepairTicks;
 
         private HediffCompProperties_MechRepair Props =>
             (HediffCompProperties_MechRepair)props;
@@ -28,13 +30,35 @@ namespace MAP_MechanoidMechanitor
             if (Props.requiresAutoRepair)
             {
                 CompMechRepairable? repairable = Pawn.TryGetComp<CompMechRepairable>();
-                if (repairable?.autoRepair != true || !MechRepairUtility.CanRepair(Pawn))
+                if (repairable?.autoRepair != true)
+                {
+                    pendingRepairTicks = 0;
+                    return;
+                }
+
+                // 按短窗口累计有效时间；无可修复内容时保留倒计时，不积攒跨周期额度。
+                pendingRepairTicks++;
+                int checkInterval = Mathf.Min(RepairEligibilityCheckIntervalTicks, Mathf.Max(1, ticksUntilRepair));
+                if (pendingRepairTicks < checkInterval)
                 {
                     return;
                 }
+
+                int elapsedTicks = pendingRepairTicks;
+                pendingRepairTicks = 0;
+                if (!MechRepairUtility.CanRepair(Pawn))
+                {
+                    return;
+                }
+
+                ticksUntilRepair -= elapsedTicks;
+            }
+            else
+            {
+                pendingRepairTicks = 0;
+                ticksUntilRepair--;
             }
 
-            ticksUntilRepair--;
             if (ticksUntilRepair > 0)
             {
                 return;
@@ -57,6 +81,12 @@ namespace MAP_MechanoidMechanitor
         {
             base.CompExposeData();
             Scribe_Values.Look(ref ticksUntilRepair, "ticksUntilRepair", 0);
+            Scribe_Values.Look(ref pendingRepairTicks, "pendingRepairTicks", 0);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                int checkInterval = Mathf.Min(RepairEligibilityCheckIntervalTicks, Mathf.Max(1, ticksUntilRepair));
+                pendingRepairTicks = Mathf.Clamp(pendingRepairTicks, 0, checkInterval - 1);
+            }
         }
     }
 
