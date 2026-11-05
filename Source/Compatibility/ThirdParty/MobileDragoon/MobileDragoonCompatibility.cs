@@ -23,6 +23,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
 
         public ThirdPartyCompatibilityResult Apply(Harmony harmony)
         {
+            MobileDragoonMoonPilotPatch.Enabled = false;
             if (ThirdPartyCompatibilityTargetResolver.FindRunningMod(TargetPackageId) == null)
             {
                 return ThirdPartyCompatibilityResult.CreateInactive(ModuleId, DisplayName, PackageId);
@@ -57,7 +58,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
                 AccessTools.Method(typeof(MobileDragoonMoonPilotPatch),
                     nameof(MobileDragoonMoonPilotPatch.TranspilerReservations)),
                 AccessTools.Method(typeof(MobileDragoonMoonPilotPatch),
-                    nameof(MobileDragoonMoonPilotPatch.PostfixAssigningCandidates))
+                    nameof(MobileDragoonMoonPilotPatch.PostfixAssigningCandidates)),
+                AccessTools.Method(typeof(MobileDragoonMoonInteractionPatch),
+                    nameof(MobileDragoonMoonInteractionPatch.PostfixBayOptions)),
+                AccessTools.Method(typeof(MobileDragoonMoonInteractionPatch),
+                    nameof(MobileDragoonMoonInteractionPatch.PostfixPawnGizmos))
             };
 
             try
@@ -66,16 +71,20 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
                 // Transpiler 对调用数量和异常块作严格校验，结构不符时抛出并回滚整个模块。
                 harmony.Patch(targets[0], transpiler: new HarmonyMethod(patches[0]));
                 harmony.Patch(targets[1], transpiler: new HarmonyMethod(patches[1]));
-                harmony.Patch(targets[2], postfix: new HarmonyMethod(patches[2]));
+                for (int i = 2; i < targets.Length; i++)
+                    harmony.Patch(targets[i], postfix: new HarmonyMethod(patches[i]));
                 foreach (MobileDragoonMoonRenderPatch.PatchTarget target in renderTargets)
                 {
                     harmony.Patch(target.Original,
                         prefix: target.IsPrefix ? new HarmonyMethod(target.Patch) : null,
                         postfix: target.IsPrefix ? null : new HarmonyMethod(target.Patch));
                 }
+                // 静态菜单提供器也遵守此开关，全部安装成功后才开放任何新增入口。
+                MobileDragoonMoonPilotPatch.Enabled = true;
             }
             catch (Exception ex)
             {
+                MobileDragoonMoonPilotPatch.Enabled = false;
                 foreach (MobileDragoonMoonRenderPatch.PatchTarget target in renderTargets)
                 {
                     try
@@ -111,7 +120,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
 
             return ThirdPartyCompatibilityResult.CreateApplied(
                 ModuleId, DisplayName, PackageId,
-                "月亮驾驶龙骑兵的 Humanlike、体型门槛、驾驶员分配候选及服装渲染兼容。");
+                "月亮驾驶龙骑兵的身份、体型、免驾驶服、驾驶员候选、手动上下机及服装渲染兼容。");
         }
 
         private static bool TryResolveTargets(
@@ -127,8 +136,13 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
                 || !ThirdPartyCompatibilityTargetResolver.TryResolveUniqueInstanceMethod(
                     framework, ParkingTypeName, "get_AssigningCandidates", typeof(IEnumerable<Pawn>),
                     Type.EmptyTypes, out MethodInfo? candidates, out failure)
+                || !ThirdPartyCompatibilityTargetResolver.TryResolveUniqueInstanceMethod(
+                    framework, BayTypeName, "GetFloatMenuOptions", typeof(IEnumerable<FloatMenuOption>),
+                    new[] { typeof(Pawn) }, out MethodInfo? bayOptions, out failure)
                 || !ThirdPartyCompatibilityTargetResolver.TryResolveUniqueType(
-                    framework, "Exosuit.Exosuit_Core", out Type? coreType, out failure))
+                    framework, "Exosuit.Exosuit_Core", out Type? coreType, out failure)
+                || !ThirdPartyCompatibilityTargetResolver.TryResolveUniqueType(
+                    framework, "Exosuit.ExosuitExt", out Type? extensionType, out failure))
             {
                 return false;
             }
@@ -136,7 +150,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
             if (!typeof(Building).IsAssignableFrom(acceptable!.DeclaringType)
                 || !typeof(JobDriver).IsAssignableFrom(reservations!.DeclaringType)
                 || !typeof(CompAssignableToPawn).IsAssignableFrom(candidates!.DeclaringType)
-                || !typeof(Apparel).IsAssignableFrom(coreType!))
+                || !typeof(Apparel).IsAssignableFrom(coreType!)
+                || !typeof(DefModExtension).IsAssignableFrom(extensionType!))
             {
                 failure = "Exosuit 整备台、任务、分配组件或核心的基类发生变化。";
                 return false;
@@ -144,13 +159,30 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
 
             if (!ThirdPartyCompatibilityTargetResolver.TryResolveUniqueInstanceMethod(
                     framework, BayTypeName, "get_Core", coreType!, Type.EmptyTypes,
-                    out MethodInfo? coreGetter, out failure))
+                    out MethodInfo? coreGetter, out failure)
+                || !ThirdPartyCompatibilityTargetResolver.TryResolveUniqueField(
+                    extensionType!, "RequiredApparelTag", typeof(string),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
+                    out FieldInfo? requiredApparelTag, out failure))
             {
                 return false;
             }
 
-            MobileDragoonMoonPilotPatch.Configure(coreType!, coreGetter!);
-            targets = new[] { acceptable!, reservations!, candidates! };
+            MethodInfo? pawnGizmos = typeof(Pawn).GetMethod(nameof(Pawn.GetGizmos),
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
+                null, Type.EmptyTypes, null);
+            if (pawnGizmos == null || pawnGizmos.ReturnType != typeof(IEnumerable<Gizmo>))
+            {
+                failure = "原版 Pawn.GetGizmos 的签名发生变化。";
+                return false;
+            }
+
+            MobileDragoonMoonPilotPatch.Configure(coreType!, coreGetter!, requiredApparelTag!);
+            if (!MobileDragoonMoonPilotPatch.ValidateTargets(acceptable!, reservations!, out failure))
+                return false;
+
+            MobileDragoonMoonInteractionPatch.Configure(coreType!, acceptable!);
+            targets = new[] { acceptable!, reservations!, candidates!, bayOptions!, pawnGizmos };
             return true;
         }
     }

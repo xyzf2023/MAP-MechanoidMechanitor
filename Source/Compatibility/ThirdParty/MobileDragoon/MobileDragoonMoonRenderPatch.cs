@@ -113,7 +113,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
 
         private static bool IsActive(Pawn? pawn)
         {
-            if (!MobileDragoonMoonPilotPatch.IsMoon(pawn) || pawn!.RaceProps.Humanlike
+            if (!MobileDragoonMoonPilotPatch.Enabled
+                || !MobileDragoonMoonPilotPatch.IsMoon(pawn) || pawn!.RaceProps.Humanlike
                 || pawn.apparel == null || pawn.story == null
                 || !HumanApparelUtility.CanRenderHumanApparel(pawn))
             {

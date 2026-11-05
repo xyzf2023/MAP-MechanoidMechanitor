@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MobileDragoon.GetInDesc>Select a maintenance bay to move to and pilot the Mobile Dragoon inside.</MAP_MobileDragoon.GetInDesc>
+  <MAP_MobileDragoon.GetOffDesc>Select an empty maintenance bay or docking point to move to and exit the Mobile Dragoon.</MAP_MobileDragoon.GetOffDesc>
+  <MAP_MobileDragoon.NoAvailableBay>No Mobile Dragoon maintenance bay or docking point is available.</MAP_MobileDragoon.NoAvailableBay>
+</LanguageData>

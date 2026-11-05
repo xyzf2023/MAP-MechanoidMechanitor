@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MobileDragoon.GetInDesc>选择整备台，前往并驾驶其中的龙骑兵。</MAP_MobileDragoon.GetInDesc>
+  <MAP_MobileDragoon.GetOffDesc>选择空闲整备台或停泊点，前往并离开龙骑兵。</MAP_MobileDragoon.GetOffDesc>
+  <MAP_MobileDragoon.NoAvailableBay>没有可用的龙骑兵整备台或停泊点。</MAP_MobileDragoon.NoAvailableBay>
+</LanguageData>
