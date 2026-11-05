@@ -1452,7 +1452,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            disabledPowerBuildings.Remove(null!);
+            // Dictionary 不接受空键；存档中失效的引用由读档合法化处理。
         }
 
         // ----------------------------------------------------------------
