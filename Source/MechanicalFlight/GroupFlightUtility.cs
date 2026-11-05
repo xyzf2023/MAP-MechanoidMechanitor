@@ -405,9 +405,24 @@ namespace MAP_MechanoidMechanitor
         internal static void TickGroups()
         {
             var registry = GameComponent_MechanicalFlightRegistry.CurrentRegistry;
-            if (registry == null)
+            if (registry == null || registry.GroupFlights.Count == 0 || registry.TickingGroups)
                 return;
-            foreach (var session in registry.GroupFlights.ToArray())
+            registry.TickingGroups = true;
+            try
+            {
+                registry.GroupTickSnapshot.AddRange(registry.GroupFlights);
+                TickGroupSessions(registry.GroupTickSnapshot);
+            }
+            finally
+            {
+                registry.GroupTickSnapshot.Clear();
+                registry.TickingGroups = false;
+            }
+        }
+
+        private static void TickGroupSessions(List<GroupFlightSession> sessions)
+        {
+            foreach (var session in sessions)
             {
                 Pawn? provider = session.Provider;
                 if (provider == null || provider.Destroyed || provider.Dead)
@@ -481,8 +496,25 @@ namespace MAP_MechanoidMechanitor
         {
             var session = Member(provider)?.Session;
             if (session == null || session.Closing || session.Provider != provider
-                || provider.Map != session.Map || provider.Dead || provider.Downed)
+                || provider.Map != session.Map || provider.Dead || provider.Downed
+                || session.SynchronizingFormation)
                 return;
+            session.SynchronizingFormation = true;
+            try
+            {
+                session.FormationSnapshot.AddRange(session.Members);
+                SynchronizeFormation(provider, session, session.FormationSnapshot);
+            }
+            finally
+            {
+                session.FormationSnapshot.Clear();
+                session.SynchronizingFormation = false;
+            }
+        }
+
+        private static void SynchronizeFormation(
+            Pawn provider, GroupFlightSession session, List<GroupFlightMember> members)
+        {
             bool providerRelocated = session.LastProviderPosition.IsValid
                 && provider.Position != session.LastProviderPosition;
             if (providerRelocated)
@@ -490,7 +522,7 @@ namespace MAP_MechanoidMechanitor
                 provider.pather?.StopDead();
                 MechanicalFlightStraightPathPatch.ClearMotion(provider);
             }
-            foreach (var member in session.Members.ToArray())
+            foreach (var member in members)
             {
                 Pawn? pawn = member.Pawn;
                 if (pawn == null || pawn == provider || !IsAttached(member))

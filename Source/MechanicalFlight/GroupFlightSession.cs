@@ -13,6 +13,9 @@ namespace MAP_MechanoidMechanitor
         public bool DeathHandled;
         public IntVec3 LastProviderPosition = IntVec3.Invalid;
         public int NextRangeCheckTick;
+        // 纯运行态快照，不写入存档；同步结束即清空成员引用并保留容量。
+        internal readonly List<GroupFlightMember> FormationSnapshot = new();
+        internal bool SynchronizingFormation;
 
         public void ExposeData()
         {

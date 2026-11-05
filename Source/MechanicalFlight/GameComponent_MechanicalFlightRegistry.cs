@@ -16,6 +16,8 @@ namespace MAP_MechanoidMechanitor
         private List<MechanicalFlightAuthorizationRecord> activeRecords = new();
         private readonly List<MechanicalFlightAuthorizationRecord> tickSnapshot = new();
         internal List<GroupFlightSession> GroupFlights = new();
+        internal readonly List<GroupFlightSession> GroupTickSnapshot = new();
+        internal bool TickingGroups;
         internal readonly Dictionary<Pawn, GroupFlightMember> GroupMembers = new();
 
         internal static MechanicalFlightAuthorizationRecord? EnsureRuntimeRecord(Pawn pawn)
