@@ -26,7 +26,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             ApplyBodyType(pawn, SkillProps);
-            ApplyBackstories(pawn, SkillProps);
+            ApplyBackstories(pawn, SkillProps, initializeNewPawn: !skillsInitialized && !respawningAfterLoad);
             EnsureSkillsInitialized(pawn, SkillProps);
         }
 
@@ -69,8 +69,14 @@ namespace MAP_MechanoidMechanitor
             pawn.story.bodyType = props.bodyType;
         }
 
-        private static void ApplyBackstories(Pawn pawn, CompProperties_CommanderSkills props)
+        private static void ApplyBackstories(Pawn pawn, CompProperties_CommanderSkills props, bool initializeNewPawn)
         {
+            // 导入人格允许没有成年背景；已有背景不因重入图而恢复种族默认值。
+            if (pawn.Dead || pawn.Destroyed || MindMappingUtility.HasMappedPersonality(pawn))
+            {
+                return;
+            }
+
             if (props.childhoodBackstory == null && props.adulthoodBackstory == null)
             {
                 return;
@@ -81,12 +87,12 @@ namespace MAP_MechanoidMechanitor
                 pawn.story = new Pawn_StoryTracker(pawn);
             }
 
-            if (props.childhoodBackstory != null)
+            if (props.childhoodBackstory != null && (initializeNewPawn || pawn.story.Childhood == null))
             {
                 pawn.story.Childhood = props.childhoodBackstory;
             }
 
-            if (props.adulthoodBackstory != null)
+            if (props.adulthoodBackstory != null && (initializeNewPawn || pawn.story.Adulthood == null))
             {
                 pawn.story.Adulthood = props.adulthoodBackstory;
             }

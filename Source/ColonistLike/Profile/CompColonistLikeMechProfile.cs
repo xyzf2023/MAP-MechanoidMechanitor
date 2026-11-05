@@ -36,6 +36,17 @@ namespace MAP_MechanoidMechanitor
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 EnsureProfile();
+                // 等待人格注册表恢复后再补齐背景；同样覆盖没有重入地图的角色。
+                Game? loadedGame = Current.Game;
+                LongEventHandler.ExecuteWhenFinished(() =>
+                {
+                    if (ReferenceEquals(Current.Game, loadedGame)
+                        && Scribe.mode == LoadSaveMode.Inactive
+                        && parent is Pawn pawn && ProfileProps != null)
+                    {
+                        EnsureStory(pawn, ProfileProps, initializeNewPawn: false);
+                    }
+                });
             }
         }
 
@@ -46,7 +57,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            EnsureStory(pawn, ProfileProps);
+            EnsureStory(pawn, ProfileProps, initializeNewPawn);
 
             // 版本迁移不代表已有技能可以覆盖；旧档缺字段、复活和重入图均保留现有数据。
             // 只有新建 Pawn 的首次配置或 Tracker 确实缺失时才应用种族初始技能。
@@ -67,7 +78,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void EnsureStory(Pawn pawn, CompProperties_ColonistLikeMechProfile props)
+        private static void EnsureStory(Pawn pawn, CompProperties_ColonistLikeMechProfile props, bool initializeNewPawn)
         {
             pawn.story ??= new Pawn_StoryTracker(pawn);
             pawn.story.traits ??= new TraitSet(pawn);
@@ -92,12 +103,19 @@ namespace MAP_MechanoidMechanitor
                 pawn.story.HairColor = props.hairColor;
             }
 
-            if (props.childhoodBackstory != null)
+            // 读档早期只补 Tracker；合法的空成年背景也属于导入人格的一部分。
+            if (Scribe.mode != LoadSaveMode.Inactive || pawn.Dead || pawn.Destroyed
+                || MindMappingUtility.HasMappedPersonality(pawn))
+            {
+                return;
+            }
+
+            if (props.childhoodBackstory != null && (initializeNewPawn || pawn.story.Childhood == null))
             {
                 pawn.story.Childhood = props.childhoodBackstory;
             }
 
-            if (props.adulthoodBackstory != null)
+            if (props.adulthoodBackstory != null && (initializeNewPawn || pawn.story.Adulthood == null))
             {
                 pawn.story.Adulthood = props.adulthoodBackstory;
             }

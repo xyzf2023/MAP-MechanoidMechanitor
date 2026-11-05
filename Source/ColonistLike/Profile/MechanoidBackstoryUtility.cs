@@ -19,7 +19,23 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (ShouldSkipDedicatedBackstoryPawn(pawn!))
+            if (Scribe.mode != LoadSaveMode.Inactive)
+            {
+                // 授权注册表可能先于人格映射记录恢复，等读档结束再判断 null 背景是否合法。
+                Game? loadedGame = Current.Game;
+                LongEventHandler.ExecuteWhenFinished(() =>
+                {
+                    if (ReferenceEquals(Current.Game, loadedGame)
+                        && Scribe.mode == LoadSaveMode.Inactive)
+                    {
+                        EnsureGenericBackstories(pawn);
+                    }
+                });
+                return;
+            }
+
+            if (ShouldSkipDedicatedBackstoryPawn(pawn!)
+                || MindMappingUtility.HasMappedPersonality(pawn))
             {
                 return;
             }
