@@ -28,6 +28,8 @@ internal static class ExpansionCompatibilityBootstrap
             ModContentPack? expansion = ReflectionTargets.FindMod("qiuci.GD5.Expansion");
             if (map == null || expansion == null) return;
 
+            ExpansionCompatibilityLog.Configure(map);
+
             // 只在真实的 MAP Mod 包内解析类型，并让其既有引导逻辑先完成初始化。
             Type modInit = ReflectionTargets.RequireType(map, "MAP_MechanoidMechanitor.ModInit");
             if (modInit.Assembly.GetName().Name != "MAP-MechanoidMechanitor"
@@ -43,13 +45,17 @@ internal static class ExpansionCompatibilityBootstrap
             if (apiType != null)
             {
                 try { api = ExpansionApi.Resolve(apiType); }
-                catch (Exception ex) { Log.Warning(LogPrefix + "API 协议不匹配，检查旧兼容分支。" + ex); }
+                catch (Exception ex)
+                {
+                    ExpansionCompatibilityLog.Warning("API 协议检查失败。",
+                        "API 协议不匹配，检查旧兼容分支。", ex);
+                }
             }
             LegacyInstallationPatches oldPatches = LegacyInstallationPatches.Resolve(map, expansion);
             oldPatches.RequireComplete();
             if (api == null)
             {
-                Log.Message(LogPrefix + "使用旧版分支；保留既有安装/自身等待补丁。");
+                ExpansionCompatibilityLog.Startup("使用旧版分支；保留既有安装/自身等待补丁。");
                 return;
             }
             AuthorizedMechanitor.Configure(map);
@@ -57,7 +63,8 @@ internal static class ExpansionCompatibilityBootstrap
         }
         catch (Exception ex)
         {
-            Log.Warning(LogPrefix + "未切换兼容分支，保留已存在的旧补丁。" + ex);
+            ExpansionCompatibilityLog.Warning("安装与自身等待兼容加载失败。",
+                "未切换兼容分支，保留已存在的旧补丁。", ex);
         }
     }
 
@@ -79,14 +86,15 @@ internal static class ExpansionCompatibilityBootstrap
             if (legacy.AnyPresent())
                 throw new InvalidOperationException("旧兼容补丁仍然存在，API 分支保持禁用。");
             AuthorizedMechanitor.Enabled = true;
-            Log.Message(LogPrefix + "使用 API v1；已原子注册安装与自身等待资格，并撤下两项旧补丁。");
+            ExpansionCompatibilityLog.Startup("使用 API v1；已原子注册安装与自身等待资格，并撤下两项旧补丁。");
         }
         catch (Exception ex)
         {
             AuthorizedMechanitor.Enabled = false;
             if (!registrationAccepted)
             {
-                Log.Warning(LogPrefix + "API 注册未取得所有权；没有撤销任何注册或旧补丁。" + ex);
+                ExpansionCompatibilityLog.Warning("安装与自身等待 API 注册失败。",
+                    "API 注册未取得所有权；没有撤销任何注册或旧补丁。", ex);
                 return;
             }
             bool apiRemoved = false;
@@ -97,12 +105,18 @@ internal static class ExpansionCompatibilityBootstrap
                     api.Unregister(SourceId);
                     apiRemoved = !api.IsRegistered(SourceId);
                 }
-                catch (Exception rollback) { Log.Warning(LogPrefix + "撤销 API 注册异常：" + rollback); }
+                catch (Exception rollback)
+                {
+                    ExpansionCompatibilityLog.Warning("安装与自身等待 API 注册回滚失败。",
+                        "撤销 API 注册异常。", rollback);
+                }
             }
             bool legacyRestored = apiRemoved && legacy.RestoreBoth();
-            Log.Warning(LogPrefix + (apiRemoved && legacyRestored
+            ExpansionCompatibilityLog.Warning(apiRemoved && legacyRestored
+                ? "安装与自身等待 API 切换失败。"
+                : "安装与自身等待 API 切换失败且回滚不完整。", apiRemoved && legacyRestored
                 ? "API 切换失败，已确认退回完整旧兼容分支。"
-                : "API 切换失败且回滚不完整；新回调保持禁用，未安装任何替代分支。") + ex);
+                : "API 切换失败且回滚不完整；新回调保持禁用，未安装任何替代分支。", ex);
         }
     }
 }

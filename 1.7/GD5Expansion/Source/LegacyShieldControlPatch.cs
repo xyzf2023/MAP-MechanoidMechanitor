@@ -34,7 +34,7 @@ internal static class LegacyShieldControlPatch
             if (original.Count(code => code.Calls(Overseer)) == 0
                 && original.Count(code => code.Calls(Controlled)) == 1)
             {
-                Log.Message(ExpansionCompatibilityBootstrap.LogPrefix + "守御投盾已原生检查玩家控制，无需旧版回退。");
+                ExpansionCompatibilityLog.Startup("守御投盾已原生检查玩家控制，无需旧版回退。");
                 return;
             }
             // 安装前先完整验证这一处窄范围改写。
@@ -44,7 +44,7 @@ internal static class LegacyShieldControlPatch
                     && entry.owner == harmony.Id) != 1)
                 throw new InvalidOperationException("无法确认投盾控制门槛补丁安装成功。");
             enabled = true;
-            Log.Message(ExpansionCompatibilityBootstrap.LogPrefix + "旧版守御投盾改用玩家控制判断；保留倒地及能量门槛。");
+            ExpansionCompatibilityLog.Startup("旧版守御投盾改用玩家控制判断；保留倒地及能量门槛。");
         }
         catch (Exception ex)
         {
@@ -52,9 +52,13 @@ internal static class LegacyShieldControlPatch
             if (target != null)
             {
                 try { harmony.Unpatch(target, patch); }
-                catch (Exception rollback) { Log.Warning(ExpansionCompatibilityBootstrap.LogPrefix + "投盾回滚异常：" + rollback); }
+                catch (Exception rollback)
+                {
+                    ExpansionCompatibilityLog.Warning("守御投盾兼容回滚失败。", "投盾回滚异常。", rollback);
+                }
             }
-            Log.Warning(ExpansionCompatibilityBootstrap.LogPrefix + "投盾目标结构不符，未启用该回退。" + ex);
+            ExpansionCompatibilityLog.Warning("守御投盾兼容加载失败。",
+                "投盾目标结构不符，未启用该回退。", ex);
         }
     }
 

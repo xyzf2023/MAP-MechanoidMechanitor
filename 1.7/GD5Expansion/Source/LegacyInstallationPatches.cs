@@ -110,7 +110,7 @@ internal sealed class LegacyInstallationPatches
             catch (Exception ex)
             {
                 restored = false;
-                Log.Warning(ExpansionCompatibilityBootstrap.LogPrefix + "旧补丁回滚异常：" + ex);
+                ExpansionCompatibilityLog.Warning("安装与自身等待旧补丁回滚失败。", "旧补丁回滚异常。", ex);
             }
         }
         return restored;
