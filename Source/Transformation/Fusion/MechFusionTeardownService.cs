@@ -145,6 +145,17 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (ShouldWaitForWearerContainer(session, source))
+            {
+                // 仍在运输时先停止活动合体效果，保留监管关系到实际落地后再整体回转。
+                bool firstWait = !session.IsPendingRecovery;
+                session.SetState(MechFusionSessionState.PendingRecovery);
+                session.TeardownDeferred = false;
+                if (firstWait)
+                    MechFusionStatCacheUtility.Invalidate(session);
+                return false;
+            }
+
             if (!HandleAirborneExit(session, wearer))
             {
                 return false;
@@ -531,15 +542,23 @@ namespace MAP_MechanoidMechanitor
 
             Pawn? wearer = session.WearerPawn;
             Caravan? caravan = wearer?.GetCaravan();
-            Map? map = wearer != null && wearer.Spawned
-                ? wearer.Map
+            Thing? wearerLocation = (Thing?)wearer?.Corpse ?? wearer;
+            Map? map = wearerLocation?.Spawned == true
+                ? wearerLocation.Map
                 : session.PendingMap;
-            IntVec3 anchor = wearer != null && wearer.Spawned
-                ? wearer.Position
+            IntVec3 anchor = wearerLocation?.Spawned == true
+                ? wearerLocation.Position
                 : session.PendingPosition;
-            Rot4 rotation = wearer != null && wearer.Spawned
-                ? wearer.Rotation
+            Rot4 rotation = wearerLocation?.Spawned == true
+                ? wearerLocation.Rotation
                 : session.PendingRotation;
+
+            // 直接恢复调用同样不能用历史落点覆盖穿戴者当前有效的容器归属。
+            if (ShouldWaitForWearerContainer(session, source))
+            {
+                deferred = true;
+                return false;
+            }
 
             // 正常死亡后的真实 Pawn 会带有 Destroyed 标记，但仍被 Corpse 持有。
             // 这种情况不是“源 Pawn 丢失”；若尸体已经有合法容器则直接成功，
@@ -1043,6 +1062,18 @@ namespace MAP_MechanoidMechanitor
             }
 
             apparel.Destroy(DestroyMode.Vanish);
+        }
+
+        private static bool ShouldWaitForWearerContainer(MechFusionSession session, Pawn source)
+        {
+            Pawn? wearer = session.WearerPawn;
+            Thing? location = (Thing?)wearer?.Corpse ?? wearer;
+            // 已恢复的源 Pawn/尸体继续收尾，不因穿戴者后来进入容器而再次等待。
+            return !IsSourceInRestoredContainer(source)
+                && wearer?.GetCaravan() == null
+                && location != null
+                && !location.Spawned
+                && location.ParentHolder != null;
         }
 
         private static bool IsSourceTrulyUnrecoverable(Pawn source)
