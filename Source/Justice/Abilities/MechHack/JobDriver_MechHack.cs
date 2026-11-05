@@ -14,10 +14,14 @@ namespace MAP_MechanoidMechanitor
         private const string HistoryEventDefName = "MAP_MechHack";
         private const string ReportWithTargetKey = "MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportWithTarget";
         private const string ReportDefaultKey = "MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportDefault";
+        // MakeNewToils 依次为停止、加入瘫痪、等待、完成；旧档等待中的 job 可能尚未登记共享责任。
+        private const int HackWaitToilIndex = 2;
 
         private Faction? originalFaction;
         private bool confirmedHostileAction;
         private bool addedImmobilizeHediff;
+        // 不持久化：读档后首次等待 tick 校验一次，兼容旧档已经提前移除瘫痪的情况。
+        private bool immobilizeHediffVerified;
         private Effecter? warmupEffecter;
 
         private Pawn? TargetPawn => job?.GetTarget(TargetIndex.A).Thing as Pawn;
@@ -122,6 +126,7 @@ namespace MAP_MechanoidMechanitor
         private void ApplyImmobilizeHediff()
         {
             addedImmobilizeHediff = false;
+            immobilizeHediffVerified = false;
 
             if (!IsValidTargetDuringHack(requireLineOfSight: true))
             {
@@ -139,12 +144,15 @@ namespace MAP_MechanoidMechanitor
 
             if (targetPawn.health.hediffSet.HasHediff(hediffDef))
             {
+                addedImmobilizeHediff = true;
+                immobilizeHediffVerified = true;
                 return;
             }
 
             Hediff hediff = HediffMaker.MakeHediff(hediffDef, targetPawn);
             targetPawn.health.AddHediff(hediff);
             addedImmobilizeHediff = true;
+            immobilizeHediffVerified = true;
         }
 
         private void StartWarmupEffecter()
@@ -174,6 +182,15 @@ namespace MAP_MechanoidMechanitor
             {
                 EndJobWith(JobCondition.Incompletable);
                 return;
+            }
+
+            if (!immobilizeHediffVerified)
+            {
+                ApplyImmobilizeHediff();
+                if (!immobilizeHediffVerified)
+                {
+                    return;
+                }
             }
 
             Pawn? targetPawn = TargetPawn;
@@ -361,17 +378,41 @@ namespace MAP_MechanoidMechanitor
 
         private void RemoveImmobilizeHediff()
         {
-            if (!addedImmobilizeHediff)
+            if (!addedImmobilizeHediff && CurToilIndex != HackWaitToilIndex)
             {
                 return;
             }
 
+            // 先释放本 job 的责任；其他施法者在等待时继续持有同一个瘫痪效果。
+            addedImmobilizeHediff = false;
+            immobilizeHediffVerified = false;
             Pawn? targetPawn = TargetPawn;
             HediffDef? hediffDef = ImmobilizeHediffDef;
             if (targetPawn?.health?.hediffSet == null || hediffDef == null)
             {
-                addedImmobilizeHediff = false;
                 return;
+            }
+
+            IReadOnlyList<Pawn>? candidates = (targetPawn.Map ?? pawn.Map)?.mapPawns.AllPawnsSpawned;
+            if (candidates != null)
+            {
+                for (int i = 0; i < candidates.Count; i++)
+                {
+                    Pawn otherPawn = candidates[i];
+                    if (otherPawn.Dead || otherPawn.Downed
+                        || !(otherPawn.jobs?.curDriver is JobDriver_MechHack other)
+                        || ReferenceEquals(other, this)
+                        || other.CurToilIndex != HackWaitToilIndex
+                        || !ReferenceEquals(other.TargetPawn, targetPawn)
+                        || !other.IsValidTargetDuringHack(requireLineOfSight: true))
+                    {
+                        continue;
+                    }
+
+                    // 同时迁移旧档中 addedImmobilizeHediff=false 的并发等待 job。
+                    other.addedImmobilizeHediff = true;
+                    return;
+                }
             }
 
             Hediff? hediff = targetPawn.health.hediffSet.GetFirstHediffOfDef(hediffDef);
@@ -379,8 +420,6 @@ namespace MAP_MechanoidMechanitor
             {
                 targetPawn.health.RemoveHediff(hediff);
             }
-
-            addedImmobilizeHediff = false;
         }
     }
 }
