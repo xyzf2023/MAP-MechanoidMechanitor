@@ -273,6 +273,13 @@ namespace MAP_MechanoidMechanitor
                 return indexed;
             }
 
+            // 日常增删同步维护索引；仅读档恢复期间需要从尚未建索引的记录中兜底。
+            if (Scribe.mode == LoadSaveMode.Inactive || Scribe.mode == LoadSaveMode.Saving
+                || authorizationRecords == null)
+            {
+                return null;
+            }
+
             for (int i = 0; i < authorizationRecords.Count; i++)
             {
                 SyntheticCompanionAuthorizationRecord candidate = authorizationRecords[i];
