@@ -75,7 +75,8 @@ namespace MAP_MechanoidMechanitor
             // 每 tick 维护倒计时和首次抽选期限，避免被事件调度的 1000 tick 间隔推迟。
             // 仅在期限到达时查找主题候选；调度组件的同 tick 调用会被去重。
             UpdateTheme();
-            extraIncidents.Tick(ActiveTheme);
+            // 暂离叙事者只停用效果；本周期的期限与已消费机会仍须保留。
+            extraIncidents.Tick(remainingTicks > 0 ? currentTheme : null, ActiveTheme != null);
         }
 
         /// <summary>主调度也调用此入口，保证地图事件抽选前主题已更新；同 tick 不重复执行。</summary>

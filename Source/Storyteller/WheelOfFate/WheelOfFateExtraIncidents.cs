@@ -59,7 +59,7 @@ namespace MAP_MechanoidMechanitor
                 weatherTick = now + theme.initialWeatherDelayTicks.RandomInRange;
         }
 
-        internal void Tick(StoryThemeDef? theme)
+        internal void Tick(StoryThemeDef? theme, bool effectsEnabled)
         {
             if (theme == null)
             {
@@ -71,8 +71,10 @@ namespace MAP_MechanoidMechanitor
             InitializeTimers(theme, now);
             if (!IsDue(now)) return;
 
-            StorytellerComp_WheelOfFateRandomMain? comp = Find.Storyteller.storytellerComps
-                .OfType<StorytellerComp_WheelOfFateRandomMain>().FirstOrDefault();
+            // 停用期间仍按原期限消费机会，但不生成事件；切回后不补发过期事件。
+            StorytellerComp_WheelOfFateRandomMain? comp = effectsEnabled
+                ? Find.Storyteller.storytellerComps.OfType<StorytellerComp_WheelOfFateRandomMain>().FirstOrDefault()
+                : null;
             raidWaves.Tick(now, comp);
             if (nextHerdMigrationTick >= 0 && now >= nextHerdMigrationTick)
             {
