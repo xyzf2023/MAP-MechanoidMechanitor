@@ -98,8 +98,15 @@ namespace MAP_MechanoidMechanitor
                     || codes[i + 4].opcode != OpCodes.Ldarg_2
                     || !codes[i + 5].Calls(RacePropsGetter)
                     || !codes[i + 6].Calls(HumanlikeGetter)
-                    || !IsBranchTrue(codes[i + 7])
-                    || !Equals(codes[i + 3].operand, codes[i + 7].operand))
+                    || !IsBranchTrue(codes[i + 7]))
+                {
+                    continue;
+                }
+
+                // Harmony 可为同一目标生成不同标签，因此比较标签唯一对应的目标指令。
+                int firstTarget = FindUniqueLabelTargetIndex(codes, codes[i + 3].operand);
+                if (firstTarget < 0
+                    || firstTarget != FindUniqueLabelTargetIndex(codes, codes[i + 7].operand))
                 {
                     continue;
                 }
@@ -125,6 +132,33 @@ namespace MAP_MechanoidMechanitor
 
         private static bool IsBranchTrue(CodeInstruction code) =>
             code.opcode == OpCodes.Brtrue || code.opcode == OpCodes.Brtrue_S;
+
+        private static int FindUniqueLabelTargetIndex(List<CodeInstruction> codes, object? operand)
+        {
+            if (!(operand is Label label))
+            {
+                return -1;
+            }
+
+            int found = -1;
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!codes[i].labels.Contains(label))
+                {
+                    continue;
+                }
+
+                // 标签缺失或被多条指令声明时，不对有歧义的控制流应用补丁。
+                if (found >= 0)
+                {
+                    return -1;
+                }
+
+                found = i;
+            }
+
+            return found;
+        }
 
         private static bool ConditionAllowedForPawn(
             PsychicRitualRoleDef role,
