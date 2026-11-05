@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- 源文件目录：Defs -->
+  <MAP_JusticeCombatAnalysisCore.label>Justice combat analysis core</MAP_JusticeCombatAnalysisCore.label>
+  <MAP_JusticeCombatAnalysisCore.description>An adaptive computation core designed specifically for Justice. It continuously records and analyzes combat data, refining its predictive models and decision-making algorithms. This highly autonomous core can improve itself through repeated iteration. When an enemy commander is defeated, it extracts insights from the battle data to optimize its internal framework and gain additional processing capacity.\n\nThis modification's effects are enhanced after the colony destroys certain powerful mechanoids.</MAP_JusticeCombatAnalysisCore.description>
+</LanguageData>

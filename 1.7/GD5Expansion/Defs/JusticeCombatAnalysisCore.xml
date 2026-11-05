@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="QCWF_MechBodyPartBionicBase">
+    <defName>MAP_JusticeCombatAnalysisCore</defName>
+    <label>正义-历战演算核心</label>
+    <description>一套专为「正义」设计的自适应演算核心，能够持续记录并分析实战中获取的作战数据，不断修正自身的预测模型与决策算法。这套核心具备高度自主的迭代能力，当击败一种敌方首领时，它便能从战斗数据中提取信息以优化自身框架，进而获得额外的信息处理能力。\n\n该配件效果会在殖民地消灭某些强大机械体后得到加强。</description>
+    <costList>
+      <Steel>60</Steel>
+      <Plasteel>20</Plasteel>
+      <ComponentIndustrial>5</ComponentIndustrial>
+    </costList>
+    <recipeMaker>
+      <researchPrerequisite>MAP_AutonomousDirectiveCore</researchPrerequisite>
+      <researchPrerequisites Inherit="false">
+        <li>GD3_Puzzle</li>
+      </researchPrerequisites>
+    </recipeMaker>
+    <descriptionHyperlinks>
+      <HediffDef>MAP_JusticeCombatAnalysisCore</HediffDef>
+    </descriptionHyperlinks>
+    <comps>
+      <li Class="MK3expand.CompProperties_ItemTargetable">
+        <compClass>MK3expand.CompTargetable_PlayerMech</compClass>
+        <avaliableRaces>
+          <li>MAP_Mech_Justice</li>
+        </avaliableRaces>
+        <conflictHediff>MAP_JusticeCombatAnalysisCore</conflictHediff>
+      </li>
+      <li Class="MK3expand.CompProperties_TargetEffectAffectPawn">
+        <compClass>MK3expand.CompTargetEffect_GiveHediffToPlayMech</compClass>
+        <jobDef>QCWFJob_GiveHediffToMech</jobDef>
+        <hediffDef>MAP_JusticeCombatAnalysisCore</hediffDef>
+        <applyToWholeBody>true</applyToWholeBody>
+        <moteDef>Mote_ResurrectFlash</moteDef>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <HediffDef ParentName="QCWF_MechImplantHediffBase">
+    <defName>MAP_JusticeCombatAnalysisCore</defName>
+    <label>正义-历战演算核心</label>
+    <labelNoun>正义-历战演算核心</labelNoun>
+    <description>一套专为「正义」设计的自适应演算核心，能够持续记录并分析实战中获取的作战数据，不断修正自身的预测模型与决策算法。这套核心具备高度自主的迭代能力，当击败一种敌方首领时，它便能从战斗数据中提取信息以优化自身框架，进而获得额外的信息处理能力。\n\n该配件效果会在殖民地消灭某些强大机械体后得到加强。</description>
+    <descriptionShort>一套具有自我迭代功能的演算核心，可以吸取战斗经验并提供额外效果。</descriptionShort>
+    <hediffClass>MAP_MechanoidMechanitor.GD5Expansion.Hediff_JusticeCombatAnalysisCore</hediffClass>
+    <initialSeverity>0.1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>4</maxSeverity>
+    <!-- 启动时从本体读取阶段；只同步数值，不继承服装的限时消失组件。 -->
+    <descriptionHyperlinks>
+      <ThingDef>MAP_JusticeCombatAnalysisCore</ThingDef>
+    </descriptionHyperlinks>
+    <spawnThingOnRemoved>MAP_JusticeCombatAnalysisCore</spawnThingOnRemoved>
+    <comps>
+      <li Class="MK3expand.HediffCompProperties_ModificationRecord">
+        <modificationThing>MAP_JusticeCombatAnalysisCore</modificationThing>
+      </li>
+    </comps>
+  </HediffDef>
+</Defs>
